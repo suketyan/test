@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>原点回帰・ホワイトボード</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #f0f0f0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif; }
+        canvas { background: white; cursor: crosshair; touch-action: none; flex-grow: 1; border-bottom: 2px solid #ccc; }
+        .toolbar { padding: 10px; display: flex; gap: 10px; background: #333; color: white; }
+        button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; background: #555; color: white; }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button onclick="clearCanvas()">全部消す</button>
+    <button id="modeBtn" onclick="toggleMode()">モード: ペンと指</button>
+</div>
+
+<canvas id="board"></canvas>
+
+<script>
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+    let isPenOnly = false;
+
+    function toggleMode() {
+        isPenOnly = !isPenOnly;
+        const btn = document.getElementById('modeBtn');
+        btn.innerText = isPenOnly ? "モード: ペン専用" : "モード: ペンと指";
+        btn.style.background = isPenOnly ? "#0078d4" : "#555";
+    }
+
+    function resize() {
+        const ratio = window.devicePixelRatio || 1;
+        
+        // CSSでの見た目のサイズを確定
+        const w = window.innerWidth;
+        const h = window.innerHeight - 50; // ツールバー分を引く
+
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+
+        // キャンバス内部の解像度をあげる
+        canvas.width = w * ratio;
+        canvas.height = h * ratio;
+
+        // 【重要】これを行うことで、draw内の座標計算でratioを気にしなくて良くなります
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 3;
+        ctx.lineCap = "round";
+        ctx.lineJoin = "round";
+    }
+    window.onresize = resize;
+    resize();
+
+    function start(e) {
+        drawing = true;
+        ctx.beginPath();
+        
+        // 最初の点へ移動
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+        ctx.moveTo(x, y);
+    }
+
+    function end() {
+        drawing = false;
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        
+        // タッチイベントかマウスイベントか判別
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+        // ★ここがズレ解消の核心
+        // 「画面上のペン位置」から「キャンバスの左上の位置」を引く
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        ctx.lineTo(x, y);
+        ctx.stroke();
+    }
+
+    // イベントリスナー
+    canvas.addEventListener('pointerdown', start, { passive: false });
+    canvas.addEventListener('pointermove', draw, { passive: false });
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+
+    function clearCanvas() {
+        // 解像度倍率（ratio）を考慮して消去
+        const ratio = window.devicePixelRatio || 1;
+        ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
+    }
+</script>
+</body>
+</html>
