@@ -112,6 +112,33 @@
             btn.classList.remove('active');
         }
     }
+    
+    let clearTimer;
+
+    // ボタンに触れた時
+    btn.addEventListener('touchstart', (e) => {
+        // ぷるんと膨らむアニメーションを開始（視覚的なフィードバック）
+        btn.style.transform = "scale(1.2)";
+        
+        clearTimer = setTimeout(() => {
+            if(confirm("全部消しますか？")) clearCanvas();
+            btn.style.transform = "scale(1)";
+        }, 500); // 0.5秒
+    });
+
+    // 指が離れたり動いたりしたらキャンセル
+    btn.addEventListener('touchend', () => {
+        clearTimeout(clearTimer);
+        btn.style.transform = "scale(1)";
+    });
+
+    btn.addEventListener('touchstart', (e) => {
+        // 触れたのが「ペンシル（stylus）」でない場合は、何もしない
+        if (e.touches[0].touchType !== 'stylus') {
+            return; 
+        }
+        clearCanvas();
+    });
 
     // 1. サイズ設定（プログラムBの「clientWidth」方式を導入）
     function resize() {
