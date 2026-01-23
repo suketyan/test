@@ -5,10 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>原点回帰・ホワイトボード</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #f0f0f0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif; }
+        body { margin: 0; overflow: hidden; background: #f0f0f0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif;
+            /* タッチ操作によるスクロールやズームを一切禁止する */
+            touch-action: none;
+            
+            /* テキスト選択なども無効にするとより操作性が上がります */
+            user-select: none;
+            -webkit-user-select: none;
+        }
         canvas { background: white; cursor: crosshair; touch-action: none; flex-grow: 1; border-bottom: 2px solid #ccc; }
         .toolbar { padding: 10px; display: flex; gap: 10px; background: #333; color: white; }
         button { padding: 8px 15px; cursor: pointer; border: none; border-radius: 4px; background: #555; color: white; }
+        button {
+            /* ガラスの質感 */
+            background: rgba(255, 255, 255, 0.4); /* 半透明の白 */
+            backdrop-filter: blur(10px);          /* 背景をぼかす（これが肝！） */
+            -webkit-backdrop-filter: blur(10px);   /* Safari/iOS用 */
+            
+            /* 境界線：上と左を明るくして「厚み」を出す */
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            
+            /* 影：リキッドらしい柔らかい影 */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            
+            /* 文字と角丸 */
+            color: #333;
+            padding: 20px 30px;
+            border-radius: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease; /* アニメーション用 */
+            outline: none;
+            font-size: 15px;
+        }
+
+        /* 基本（OFF）の状態：白いリキッドガラス */
+        #modeBtn {
+            background: rgba(255, 255, 255, 0.3); /* 透明度のある白 */
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            color: #333;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弾むアニメーション */
+        }
+
+        /* ONの状態：鮮やかな青のリキッドガラス */
+        #modeBtn.active {
+            background: rgba(0, 120, 212, 0.5); /* 透明度のある青 */
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            color: #fff; /* 文字を白くして読みやすく */
+            transform: scale(1.05); /* ONの時は少し大きくして強調 */
+            box-shadow: 0 8px 20px rgba(0, 120, 212, 0.3);
+        }
+
+        /* 押した時の「液体のような」変化 */
+        button:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+            transition: transform 0.1s ease; /* 戻る時だけは速く */
+        }
+
+        /* ツールバー全体の背景も少し透かすとおしゃれです */
+        .toolbar {
+            padding: 15px;
+            display: flex;
+            gap: 15px;
+            background: rgba(240, 240, 240, 0.5); /* ツールバーも半透明に */
+            backdrop-filter: blur(5px);
+            position: fixed; /* 画面上部に固定 */
+            top: 0;
+            width: 100%;
+            z-index: 100;
+        }
+        
     </style>
 </head>
 <body>
@@ -29,27 +101,34 @@
     function toggleMode() {
         isPenOnly = !isPenOnly;
         const btn = document.getElementById('modeBtn');
+
+        // テキストの書き換え
         btn.innerText = isPenOnly ? "モード: ペン専用" : "モード: ペンと指";
-        btn.style.background = isPenOnly ? "#0078d4" : "#555";
+
+        // クラスの付け外し（これで色が「じわ〜っ」と変わる）
+        if (isPenOnly) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
     }
 
+    // 1. サイズ設定（プログラムBの「clientWidth」方式を導入）
     function resize() {
         const ratio = window.devicePixelRatio || 1;
         
-        // CSSでの見た目のサイズを確定
-        const w = window.innerWidth;
-        const h = window.innerHeight - 50; // ツールバー分を引く
+        // CSSでの見た目のサイズを取得
+        const displayWidth = canvas.clientWidth;
+        const displayHeight = canvas.clientHeight;
 
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
+        // 内部解像度を倍率分だけ拡大
+        canvas.width = displayWidth * ratio;
+        canvas.height = displayHeight * ratio;
 
-        // キャンバス内部の解像度をあげる
-        canvas.width = w * ratio;
-        canvas.height = h * ratio;
-
-        // 【重要】これを行うことで、draw内の座標計算でratioを気にしなくて良くなります
+        // 【座標ズレ対策】描画スケールを固定
         ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
         
+        // 線の設定
         ctx.strokeStyle = "#333";
         ctx.lineWidth = 3;
         ctx.lineCap = "round";
@@ -58,15 +137,27 @@
     window.onresize = resize;
     resize();
 
+    // 2. 座標取得（プログラムBの計算ロジック）
+    function getPos(e, rect) {
+        // マウスとタッチの両方の座標を1行で取得
+        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        
+        return {
+            x: clientX - rect.left,
+            y: clientY - rect.top
+        };
+    }
+
     function start(e) {
+        if (isPenOnly && e.pointerType !== 'pen') return;
+
         drawing = true;
         ctx.beginPath();
         
-        // 最初の点へ移動
         const rect = canvas.getBoundingClientRect();
-        const x = (e.clientX || e.touches[0].clientX) - rect.left;
-        const y = (e.clientY || e.touches[0].clientY) - rect.top;
-        ctx.moveTo(x, y);
+        const pos = getPos(e, rect);
+        ctx.moveTo(pos.x, pos.y);
     }
 
     function end() {
@@ -77,28 +168,23 @@
         if (!drawing) return;
         
         const rect = canvas.getBoundingClientRect();
-        
-        // タッチイベントかマウスイベントか判別
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+        const pos = getPos(e, rect);
 
-        // ★ここがズレ解消の核心
-        // 「画面上のペン位置」から「キャンバスの左上の位置」を引く
-        const x = clientX - rect.left;
-        const y = clientY - rect.top;
-
-        ctx.lineTo(x, y);
+        ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
     }
 
-    // イベントリスナー
-    canvas.addEventListener('pointerdown', start, { passive: false });
-    canvas.addEventListener('pointermove', draw, { passive: false });
-    window.addEventListener('pointerup', end);
-    window.addEventListener('pointercancel', end);
+    // 3. イベントリスナー（Aの安定版を維持）
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', end);
+
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); }, {passive: false});
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
+    canvas.addEventListener('touchend', end);
 
     function clearCanvas() {
-        // 解像度倍率（ratio）を考慮して消去
+        // 消去時も解像度(ratio)を考慮
         const ratio = window.devicePixelRatio || 1;
         ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
     }
