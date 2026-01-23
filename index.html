@@ -112,22 +112,6 @@
             btn.classList.remove('active');
         }
     }
-    
-    let clearTimer;
-
-    // 指が離れたり動いたりしたらキャンセル
-    btn.addEventListener('touchend', () => {
-        clearTimeout(clearTimer);
-        btn.style.transform = "scale(1)";
-    });
-
-    btn.addEventListener('touchstart', (e) => {
-        // 触れたのが「ペンシル（stylus）」でない場合は、何もしない
-        if (e.touches[0].touchType !== 'stylus') {
-            return; 
-        }
-        clearCanvas();
-    });
 
     // 1. サイズ設定（プログラムBの「clientWidth」方式を導入）
     function resize() {
@@ -207,4 +191,5 @@
 </script>
 </body>
 </html>
+
 
