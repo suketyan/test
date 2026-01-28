@@ -1,203 +1,345 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>原点回帰・ホワイトボード</title>
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-    <style>
-        
-        body { margin: 0; overflow: hidden; background: #f0f0f0; display: flex; flex-direction: column; height: 100vh; font-family: sans-serif;
-            /* タッチ操作によるスクロールやズームを一切禁止する */
-            touch-action: none;
-            
-            /* テキスト選択なども無効にするとより操作性が上がります */
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        canvas { background: white; cursor: crosshair; touch-action: none; flex-grow: 1; border-bottom: 2px solid #ccc; }
-        .toolbar { padding: 10px; display: flex; gap: 10px; background: #333; color: white; }
-        button {
-        /* ガラスの質感 */
-        background: rgba(255, 255, 255, 0.4);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        
-        border: 1px solid rgba(255, 255, 255, 0.7);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-        border-right: 1px solid rgba(255, 255, 255, 0.2);
-        
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        
-        /* 丸くするための設定 */
-        width: 65px;           /* 幅と高さを同じにする */
-        height: 65px;
-        border-radius: 50%;    /* これで完全な円になる */
-        padding: 0;            /* パディングを解除して中央配置を優先 */
-        
-        /* 文字の調整 */
-        color: #333;
-        font-weight: bold;
-        font-size: 12px;       /* 円の中に収まるように少し小さく */
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        
-        cursor: pointer;
-        transition: all 0.3s ease;
-        outline: none;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+  <title>原点回帰・ホワイトボード (アイコン色調整)</title>
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <style>
+    :root{
+      --bg-page: #f0f0f0;
+      --toolbar-bg: rgba(240,240,240,0.6);
+      --toolbar-fore: #111;
+      --button-bg: rgba(255,255,255,0.4);
+      --button-fore: #333;
+      --button-active-bg: rgba(0,120,212,0.5); /* modeBtn のアクティブ用（任意） */
+      --canvas-bg: #ffffff;
+      --stroke: #333;
+      --toolbar-shadow: rgba(0,0,0,0.1);
+      --toolbar-border: rgba(255,255,255,0.35);
+    }
+    [data-theme="dark"]{
+      --bg-page: #0f1113;
+      --toolbar-bg: rgba(18,20,22,0.86);
+      --toolbar-fore: #eef3ff;
+      --button-bg: rgba(255,255,255,0.04);
+      --button-fore: #e6eef8;
+      --button-active-bg: rgba(10,130,230,0.16);
+      --canvas-bg: #0b0c0e;
+      --stroke: #e6eef8;
+      --toolbar-shadow: rgba(0,0,0,0.7);
+      --toolbar-border: rgba(255,255,255,0.06);
+    }
 
-        /* モード切り替えボタン専用の調整 */
-        #modeBtn {
-            width: 65px;  /* 文字数が多い場合は少し大きめの円にする */
-            height: 65px;
-            font-size: 11px;
-            line-height: 1.2;
-        }
+    html,body { height:100%; margin:0; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: var(--bg-page);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      color: var(--toolbar-fore);
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+    }
 
-        /* ONの状態：鮮やかな青のリキッドガラス */
-        #modeBtn.active {
-            background: rgba(0, 120, 212, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            color: #fff;
-            transform: scale(1.1); /* 円形だと大きさが変わるのが映える */
-            box-shadow: 0 8px 20px rgba(0, 120, 212, 0.3);
-        }
+    canvas {
+      background: var(--canvas-bg);
+      cursor: crosshair;
+      touch-action: none;
+      flex-grow: 1;
+      border-bottom: 2px solid rgba(0,0,0,0.06);
+      display:block;
+    }
 
-        /* 押した時の「液体のような」変化 */
-        button:active {
-            transform: scale(0.95);
-            background: rgba(255, 255, 255, 0.6);
-            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
-            transition: transform 0.1s ease; /* 戻る時だけは速く */
-        }
+    .toolbar {
+      padding: 12px;
+      display: flex;
+      gap: 10px;
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 200;
+      border-radius: 14px;
+      background: var(--toolbar-bg);
+      backdrop-filter: blur(12px) saturate(120%);
+      -webkit-backdrop-filter: blur(12px) saturate(120%);
+      box-shadow: 0 12px 30px var(--toolbar-shadow);
+      align-items: center;
+      border: 1px solid var(--toolbar-border);
+      padding-left: 14px;
+      padding-right: 14px;
+    }
 
-        /* ツールバー全体の背景も少し透かすとおしゃれです */
-        .toolbar {
-            border-radius: 50px; 
-            margin: 20px;
-            padding: 15px;
-            display: flex;
-            gap: 15px;
-            background: rgba(240, 240, 240, 0.5); /* ツールバーも半透明に */
-            backdrop-filter: blur(5px);
-            position: fixed; /* 画面上部に固定 */
-            top: 0;
-            width: 150px;
-            z-index: 100;
-        }
-        
-    </style>
+    .toolbar::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      border-radius: 14px;
+      background-image: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0));
+      mix-blend-mode: overlay;
+    }
+
+    button {
+      background: var(--button-bg);
+      border: 1px solid transparent;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      padding: 0;
+      color: var(--button-fore);
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+      outline: none;
+    }
+
+    /* アイコンサイズ */
+    button i.bx { font-size: 22px; line-height:1; display:block; }
+
+    [data-theme="dark"] button {
+      border-color: rgba(255,255,255,0.03);
+      box-shadow: 0 8px 22px rgba(0,0,0,0.55);
+    }
+
+    button:focus { box-shadow: 0 8px 26px rgba(10,120,212,0.18); transform: translateY(-2px) scale(1.02); }
+    button:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
+
+    /* modeBtn の ON 表示はテーマによってアイコン色を切り替える */
+    /* ライトテーマ（デフォルト）で ON のときは icon を黒に */
+    :root #modeBtn.active { background: var(--button-active-bg); /* 背景はそのまま */ color: #000; }
+    :root #modeBtn.active i.bx { color: #000; } /* アイコン黒 */
+
+    /* ダークテーマで ON のときは icon を白に */
+    [data-theme="dark"] #modeBtn.active { background: var(--button-active-bg); color: #fff; }
+    [data-theme="dark"] #modeBtn.active i.bx { color: #fff; }
+
+    /* themeBtn の active（ダークを示す状態）は青くしない：ニュートラル表示 */
+    #themeBtn.active {
+      /* 目立ちすぎない背景（テーマに応じた薄い色） */
+      background: rgba(255,255,255,0.06);
+      color: var(--button-fore);
+      transform: none;
+      border-color: rgba(255,255,255,0.06);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    }
+    /* ダーク時は少し違う濃度 */
+    [data-theme="dark"] #themeBtn.active {
+      background: rgba(255,255,255,0.03);
+      color: var(--button-fore);
+      border-color: rgba(255,255,255,0.04);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    }
+
+    .toolbar small { margin-left: 8px; font-size:12px; color: var(--toolbar-fore); }
+
+    @media (max-width:420px){
+      .toolbar { left: 12px; margin: 12px; padding: 10px; }
+      button { width:48px; height:48px; }
+      button i.bx { font-size: 18px; }
+    }
+  </style>
 </head>
 <body>
+  <div class="toolbar" role="toolbar" aria-label="ツールバー">
+    <button id="clearBtn" title="消去" aria-label="消去"><i class="bx bx-trash"></i></button>
+    <button id="modeBtn" title="ペンのみ切替" aria-pressed="false" aria-label="ペンのみ切替"><i class="bx bx-pencil"></i></button>
+    <button id="themeBtn" title="テーマ切替" aria-pressed="false" aria-label="テーマ切替"><i class="bx bx-moon"></i></button>
+    <small id="hint" aria-hidden="true">ペンのみモード / テーマ切替</small>
+  </div>
 
-<script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+  <canvas id="board" aria-label="描画領域"></canvas>
 
-<div class="toolbar">
-    <button onclick="clearCanvas()"><box-icon type='solid' name='trash-alt'></box-icon></button>
-    <button id="modeBtn" onclick="toggleMode()"><box-icon name='pencil' type='solid' ></box-icon></button>
-</div>
-
-<canvas id="board"></canvas>
-
-<script>
+  <script>
+  (function () {
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
+    const modeBtn = document.getElementById('modeBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const themeBtn = document.getElementById('themeBtn');
+
     let drawing = false;
     let isPenOnly = false;
+    let activePointerId = null;
+    let lastX = 0, lastY = 0;
 
-    function toggleMode() {
-        isPenOnly = !isPenOnly;
-        const btn = document.getElementById('modeBtn');
-
-        // テキストの書き換え
-        btn.innerHTML = isPenOnly ? "<box-icon name='edit' ></box-icon>" : "<box-icon name='pencil' type='solid' ></box-icon>";
-
-        // クラスの付け外し（これで色が「じわ〜っ」と変わる）
-        if (isPenOnly) {
-            btn.classList.add('active');
+    const THEME_KEY = 'wb_theme';
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeBtn.classList.add('active');
+            themeBtn.innerHTML = "<i class='bx bx-sun'></i>";
+            themeBtn.setAttribute('aria-pressed', 'true');
         } else {
-            btn.classList.remove('active');
+            document.documentElement.removeAttribute('data-theme');
+            themeBtn.classList.remove('active');
+            themeBtn.innerHTML = "<i class='bx bx-moon'></i>";
+            themeBtn.setAttribute('aria-pressed', 'false');
+        }
+        try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+        // modeBtn の active 色は CSS 側で data-theme を参照するので、ここでクラスだけ維持すればOK
+        // ただしモードが ON の場合は見た目を再反映するため class は維持
+        if (isPenOnly) modeBtn.classList.add('active'); else modeBtn.classList.remove('active');
+    }
+    const saved = (function(){ try { return localStorage.getItem(THEME_KEY); } catch (e){ return null; }})();
+    applyTheme(saved === 'dark' ? 'dark' : 'light');
+
+    function updateModeButtonUI() {
+        if (isPenOnly) {
+            modeBtn.classList.add('active');
+            modeBtn.innerHTML = "<i class='bx bx-edit'></i>";
+            modeBtn.title = "ペンのみ（ON）";
+            modeBtn.setAttribute('aria-pressed', 'true');
+        } else {
+            modeBtn.classList.remove('active');
+            modeBtn.innerHTML = "<i class='bx bx-pencil'></i>";
+            modeBtn.title = "ペンのみ（OFF）";
+            modeBtn.setAttribute('aria-pressed', 'false');
         }
     }
+    updateModeButtonUI();
 
-    // 1. サイズ設定（プログラムBの「clientWidth」方式を導入）
+    modeBtn.addEventListener('click', () => {
+        isPenOnly = !isPenOnly;
+        updateModeButtonUI();
+    });
+    clearBtn.addEventListener('click', clearCanvas);
+    themeBtn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+
+    // --- 高DPI 対応 & サイズ管理 (内部ピクセル単位で描画) ---
     function resize() {
-        const ratio = window.devicePixelRatio || 1;
-        
-        // CSSでの見た目のサイズを取得
-        const displayWidth = canvas.clientWidth;
-        const displayHeight = canvas.clientHeight;
+        const dpr = window.devicePixelRatio || 1;
+        const cssW = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+        const cssH = Math.max(document.documentElement.clientHeight || 0, window.innerHeight || 0);
 
-        // 内部解像度を倍率分だけ拡大
-        canvas.width = displayWidth * ratio;
-        canvas.height = displayHeight * ratio;
+        const intW = Math.round(cssW * dpr);
+        const intH = Math.round(cssH * dpr);
 
-        // 【座標ズレ対策】描画スケールを固定
-        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-        
-        // 線の設定
-        ctx.strokeStyle = "#333";
-        ctx.lineWidth = 3;
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
+        if (canvas.width === intW && canvas.height === intH) {
+            canvas.style.width = cssW + 'px';
+            canvas.style.height = cssH + 'px';
+            return;
+        }
+
+        const tmp = document.createElement('canvas');
+        tmp.width = canvas.width;
+        tmp.height = canvas.height;
+        const tctx = tmp.getContext('2d');
+        if (canvas.width && canvas.height) tctx.drawImage(canvas, 0, 0);
+
+        canvas.width = intW;
+        canvas.height = intH;
+        canvas.style.width = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+        if (tmp.width && tmp.height) {
+            ctx.drawImage(tmp, 0, 0, tmp.width, tmp.height, 0, 0, canvas.width, canvas.height);
+        }
+
+        const baseCssLineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--stroke') || '#333';
+        ctx.lineWidth = baseCssLineWidth * (window.devicePixelRatio || 1);
     }
-    window.onresize = resize;
+    window.addEventListener('resize', resize);
     resize();
 
-    // 2. 座標取得（プログラムBの計算ロジック）
-    function getPos(e, rect) {
-        // マウスとタッチの両方の座標を1行で取得
-        const clientX = e.clientX || (e.touches && e.touches[0].clientX);
-        const clientY = e.clientY || (e.touches && e.touches[0].clientY);
-        
-        return {
-            x: clientX - rect.left,
-            y: clientY - rect.top
-        };
-    }
-
-    function start(e) {
-        if (isPenOnly && e.pointerType !== 'pen') return;
-
-        drawing = true;
-        ctx.beginPath();
-        
-        const rect = canvas.getBoundingClientRect();
-        const pos = getPos(e, rect);
-        ctx.moveTo(pos.x, pos.y);
-    }
-
-    function end() {
-        drawing = false;
-    }
-
-    function draw(e) {
-        if (!drawing) return;
-        
-        const rect = canvas.getBoundingClientRect();
-        const pos = getPos(e, rect);
-
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-    }
-
-    // 3. イベントリスナー（Aの安定版を維持）
-    canvas.addEventListener('mousedown', start);
-    canvas.addEventListener('mousemove', draw);
-    window.addEventListener('mouseup', end);
-
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); start(e); }, {passive: false});
-    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, {passive: false});
-    canvas.addEventListener('touchend', end);
-
     function clearCanvas() {
-        // 消去時も解像度(ratio)を考慮
-        const ratio = window.devicePixelRatio || 1;
-        ctx.clearRect(0, 0, canvas.width / ratio, canvas.height / ratio);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
-</script>
+
+    function getPosInternal(ev) {
+        const rect = canvas.getBoundingClientRect();
+        const dprX = canvas.width / rect.width;
+        const dprY = canvas.height / rect.height;
+        const clientX = ev.clientX !== undefined ? ev.clientX : (ev.touches && ev.touches[0] && ev.touches[0].clientX) || 0;
+        const clientY = ev.clientY !== undefined ? ev.clientY : (ev.touches && ev.touches[0] && ev.touches[0].clientY) || 0;
+        const x = (clientX - rect.left) * dprX;
+        const y = (clientY - rect.top) * dprY;
+        return { x, y };
+    }
+
+    canvas.style.touchAction = 'none';
+
+    canvas.addEventListener('pointerdown', (e) => {
+        if (isPenOnly && e.pointerType !== 'pen') return;
+        e.preventDefault();
+        drawing = true;
+        activePointerId = e.pointerId;
+        try { canvas.setPointerCapture(activePointerId); } catch (err) {}
+        const p = getPosInternal(e);
+        lastX = p.x; lastY = p.y;
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+        if (isPenOnly && e.pointerType !== 'pen') return;
+        if (!drawing || e.pointerId !== activePointerId) return;
+        const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        for (const ev of events) {
+            const p = getPosInternal(ev);
+            const baseCssLineWidth = 3;
+            const dpr = window.devicePixelRatio || 1;
+            const pressure = (typeof ev.pressure === 'number') ? ev.pressure : 0.5;
+            ctx.lineWidth = (baseCssLineWidth * dpr) * (0.6 + 0.8 * pressure);
+            ctx.lineTo(p.x, p.y);
+            lastX = p.x;
+            lastY = p.y;
+        }
+        ctx.stroke();
+    });
+
+    function endPointer(e) {
+        if (isPenOnly && e.pointerType !== 'pen') return;
+        if (e.pointerId !== activePointerId) {
+            try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
+            return;
+        }
+        drawing = false;
+        try { canvas.releasePointerCapture(activePointerId); } catch (err) {}
+        activePointerId = null;
+        ctx.closePath();
+    }
+
+    canvas.addEventListener('pointerup', (e) => endPointer(e));
+    canvas.addEventListener('pointercancel', (e) => endPointer(e));
+
+    window.addEventListener('blur', () => {
+        if (drawing) {
+            drawing = false;
+            activePointerId = null;
+            ctx.closePath();
+        }
+    });
+
+    function refreshStrokeFromCSS() {
+        const strokeColor = getComputedStyle(document.documentElement).getPropertyValue('--stroke').trim();
+        if (strokeColor) ctx.strokeStyle = strokeColor;
+    }
+    refreshStrokeFromCSS();
+    const mo = new MutationObserver(() => refreshStrokeFromCSS());
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    console.log('UserAgent:', navigator.userAgent);
+  })();
+  </script>
 </body>
 </html>
