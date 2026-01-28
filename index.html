@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-  <title>原点回帰・ホワイトボード (アイコン色調整)</title>
+  <title>原点回帰・ホワイトボード (テーマで再描画)</title>
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
   <style>
     :root{
@@ -12,7 +12,7 @@
       --toolbar-fore: #111;
       --button-bg: rgba(255,255,255,0.4);
       --button-fore: #333;
-      --button-active-bg: rgba(0,120,212,0.5); /* modeBtn のアクティブ用（任意） */
+      --button-active-bg: rgba(0,120,212,0.5);
       --canvas-bg: #ffffff;
       --stroke: #333;
       --toolbar-shadow: rgba(0,0,0,0.1);
@@ -26,7 +26,7 @@
       --button-fore: #e6eef8;
       --button-active-bg: rgba(10,130,230,0.16);
       --canvas-bg: #0b0c0e;
-      --stroke: #e6eef8;
+      --stroke: #e6eef8; /* ダーク時の描画色（白系） */
       --toolbar-shadow: rgba(0,0,0,0.7);
       --toolbar-border: rgba(255,255,255,0.06);
     }
@@ -74,16 +74,6 @@
       padding-right: 14px;
     }
 
-    .toolbar::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      border-radius: 14px;
-      background-image: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0));
-      mix-blend-mode: overlay;
-    }
-
     button {
       background: var(--button-bg);
       border: 1px solid transparent;
@@ -103,50 +93,25 @@
       outline: none;
     }
 
-    /* アイコンサイズ */
     button i.bx { font-size: 22px; line-height:1; display:block; }
-
-    [data-theme="dark"] button {
-      border-color: rgba(255,255,255,0.03);
-      box-shadow: 0 8px 22px rgba(0,0,0,0.55);
-    }
 
     button:focus { box-shadow: 0 8px 26px rgba(10,120,212,0.18); transform: translateY(-2px) scale(1.02); }
     button:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
 
-    /* modeBtn の ON 表示はテーマによってアイコン色を切り替える */
-    /* ライトテーマ（デフォルト）で ON のときは icon を黒に */
-    :root #modeBtn.active { background: var(--button-active-bg); /* 背景はそのまま */ color: #000; }
-    :root #modeBtn.active i.bx { color: #000; } /* アイコン黒 */
-
-    /* ダークテーマで ON のときは icon を白に */
-    [data-theme="dark"] #modeBtn.active { background: var(--button-active-bg); color: #fff; }
-    [data-theme="dark"] #modeBtn.active i.bx { color: #fff; }
-
-    /* themeBtn の active（ダークを示す状態）は青くしない：ニュートラル表示 */
-    #themeBtn.active {
-      /* 目立ちすぎない背景（テーマに応じた薄い色） */
-      background: rgba(255,255,255,0.06);
-      color: var(--button-fore);
-      transform: none;
-      border-color: rgba(255,255,255,0.06);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    #modeBtn.active {
+    background: var(--button-active-bg); /* 既に定義済みの青を使う */
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 14px 36px rgba(0,120,212,0.18);
+    transform: scale(1.05);
     }
-    /* ダーク時は少し違う濃度 */
-    [data-theme="dark"] #themeBtn.active {
-      background: rgba(255,255,255,0.03);
-      color: var(--button-fore);
-      border-color: rgba(255,255,255,0.04);
-      box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+
+    /* アイコン自体は置き換えないので、色は inherit（親の color）を使う */
+    #modeBtn i.bx {
+      color: inherit;
     }
 
     .toolbar small { margin-left: 8px; font-size:12px; color: var(--toolbar-fore); }
-
-    @media (max-width:420px){
-      .toolbar { left: 12px; margin: 12px; padding: 10px; }
-      button { width:48px; height:48px; }
-      button i.bx { font-size: 18px; }
-    }
+    @media (max-width:420px){ .toolbar { left: 12px; margin: 12px; padding: 10px; } button { width:48px; height:48px; } button i.bx { font-size: 18px; } }
   </style>
 </head>
 <body>
@@ -159,8 +124,8 @@
 
   <canvas id="board" aria-label="描画領域"></canvas>
 
-  <script>
-  (function () {
+<script>
+(function () {
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
     const modeBtn = document.getElementById('modeBtn');
@@ -172,6 +137,12 @@
     let activePointerId = null;
     let lastX = 0, lastY = 0;
 
+    // 履歴（ストロークごとに点列を保存）
+    // stroke = { points: [{x,y,pressure}], baseCssLineWidth: number }
+    const strokes = [];
+    let currentStroke = null;
+
+    // テーマ管理
     const THEME_KEY = 'wb_theme';
     function applyTheme(theme) {
         if (theme === 'dark') {
@@ -186,25 +157,35 @@
             themeBtn.setAttribute('aria-pressed', 'false');
         }
         try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
-        // modeBtn の active 色は CSS 側で data-theme を参照するので、ここでクラスだけ維持すればOK
-        // ただしモードが ON の場合は見た目を再反映するため class は維持
-        if (isPenOnly) modeBtn.classList.add('active'); else modeBtn.classList.remove('active');
+        // テーマ変化時は stroke 色を再読み込みして履歴を再描画
+        refreshStrokeFromCSS();
+        redrawAll();
     }
     const saved = (function(){ try { return localStorage.getItem(THEME_KEY); } catch (e){ return null; }})();
     applyTheme(saved === 'dark' ? 'dark' : 'light');
 
     function updateModeButtonUI() {
-        if (isPenOnly) {
-            modeBtn.classList.add('active');
-            modeBtn.innerHTML = "<i class='bx bx-edit'></i>";
-            modeBtn.title = "ペンのみ（ON）";
-            modeBtn.setAttribute('aria-pressed', 'true');
-        } else {
-            modeBtn.classList.remove('active');
-            modeBtn.innerHTML = "<i class='bx bx-pencil'></i>";
-            modeBtn.title = "ペンのみ（OFF）";
-            modeBtn.setAttribute('aria-pressed', 'false');
+      const icon = modeBtn.querySelector('i.bx');
+      if (isPenOnly) {
+        // ON: class を付けるだけ（アイコン画像は差し替えない）
+        modeBtn.classList.add('active');
+        modeBtn.title = "ペンのみ（ON）";
+        modeBtn.setAttribute('aria-pressed', 'true');
+
+        // アイコン色は CSS の #modeBtn.active で制御する（ここでは直接触らない）
+        if (icon) {
+          icon.style.color = ''; // 明示的変更を消す（必要なら削除）
         }
+      } else {
+        // OFF: class を外すだけ
+        modeBtn.classList.remove('active');
+        modeBtn.title = "ペンのみ（OFF）";
+        modeBtn.setAttribute('aria-pressed', 'false');
+
+        if (icon) {
+          icon.style.color = ''; // デフォルトに戻す
+        }
+      }
     }
     updateModeButtonUI();
 
@@ -216,9 +197,11 @@
     themeBtn.addEventListener('click', () => {
         const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
         applyTheme(current === 'dark' ? 'light' : 'dark');
+        // updateModeButtonUI() を呼んでアイコン色を整える
+        updateModeButtonUI();
     });
 
-    // --- 高DPI 対応 & サイズ管理 (内部ピクセル単位で描画) ---
+    // --- highDPI & resize ---
     function resize() {
         const dpr = window.devicePixelRatio || 1;
         const cssW = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
@@ -233,6 +216,7 @@
             return;
         }
 
+        // 保存して戻す（描画保持）
         const tmp = document.createElement('canvas');
         tmp.width = canvas.width;
         tmp.height = canvas.height;
@@ -253,16 +237,23 @@
         const baseCssLineWidth = 3;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--stroke') || '#333';
+        // strokeStyle は CSS 変数から取得（refreshStrokeFromCSS が設定）
         ctx.lineWidth = baseCssLineWidth * (window.devicePixelRatio || 1);
+
+        // 再描画（異なる内部ピクセルサイズに合わせる）
+        redrawAll();
     }
     window.addEventListener('resize', resize);
     resize();
 
+    // clear: 履歴も消す
     function clearCanvas() {
+        strokes.length = 0;
+        currentStroke = null;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
 
+    // CSS座標 -> 内部ピクセル座標
     function getPosInternal(ev) {
         const rect = canvas.getBoundingClientRect();
         const dprX = canvas.width / rect.width;
@@ -274,6 +265,53 @@
         return { x, y };
     }
 
+    // 履歴を全て再描画（現在の ctx.strokeStyle に従う）
+    function redrawAll() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // strokeColor is already set in ctx.strokeStyle via refreshStrokeFromCSS()
+        for (const s of strokes) {
+            if (!s.points || s.points.length < 2) continue;
+            ctx.beginPath();
+            // start at first point
+            ctx.moveTo(s.points[0].x, s.points[0].y);
+            for (let i = 1; i < s.points.length; i++) {
+                const pt = s.points[i];
+                // compute lineWidth per point (use stored baseCss and pressure)
+                const dpr = window.devicePixelRatio || 1;
+                const lineWidth = (s.baseCssLineWidth * dpr) * (0.6 + 0.8 * (pt.pressure !== undefined ? pt.pressure : 0.5));
+                ctx.lineWidth = lineWidth;
+                ctx.lineTo(pt.x, pt.y);
+            }
+            ctx.stroke();
+            ctx.closePath();
+        }
+        // if a stroke is currently drawing, draw it too
+        if (currentStroke && currentStroke.points && currentStroke.points.length > 1) {
+            ctx.beginPath();
+            ctx.moveTo(currentStroke.points[0].x, currentStroke.points[0].y);
+            for (let i = 1; i < currentStroke.points.length; i++) {
+                const pt = currentStroke.points[i];
+                const dpr = window.devicePixelRatio || 1;
+                ctx.lineWidth = (currentStroke.baseCssLineWidth * dpr) * (0.6 + 0.8 * (pt.pressure !== undefined ? pt.pressure : 0.5));
+                ctx.lineTo(pt.x, pt.y);
+            }
+            ctx.stroke();
+            ctx.closePath();
+        }
+    }
+
+    // 現在のテーマに基づいて ctx.strokeStyle を更新
+    function refreshStrokeFromCSS() {
+        const strokeColor = getComputedStyle(document.documentElement).getPropertyValue('--stroke').trim() || '';
+        // getComputedStyle may return empty; pick default by theme
+        if (strokeColor) ctx.strokeStyle = strokeColor;
+        else {
+            ctx.strokeStyle = document.documentElement.getAttribute('data-theme') === 'dark' ? '#fff' : '#333';
+        }
+    }
+    refreshStrokeFromCSS();
+
+    // pointer イベント（ベクター履歴に点を保存）
     canvas.style.touchAction = 'none';
 
     canvas.addEventListener('pointerdown', (e) => {
@@ -284,6 +322,9 @@
         try { canvas.setPointerCapture(activePointerId); } catch (err) {}
         const p = getPosInternal(e);
         lastX = p.x; lastY = p.y;
+        // start a new current stroke
+        currentStroke = { points: [{ x: lastX, y: lastY, pressure: (typeof e.pressure === 'number' ? e.pressure : 0.5) }], baseCssLineWidth: 3 };
+        // live-draw begin
         ctx.beginPath();
         ctx.moveTo(lastX, lastY);
     });
@@ -292,17 +333,18 @@
         if (isPenOnly && e.pointerType !== 'pen') return;
         if (!drawing || e.pointerId !== activePointerId) return;
         const events = (typeof e.getCoalescedEvents === 'function') ? e.getCoalescedEvents() : [e];
+
+        // draw and append points
         ctx.beginPath();
         ctx.moveTo(lastX, lastY);
         for (const ev of events) {
             const p = getPosInternal(ev);
-            const baseCssLineWidth = 3;
-            const dpr = window.devicePixelRatio || 1;
             const pressure = (typeof ev.pressure === 'number') ? ev.pressure : 0.5;
-            ctx.lineWidth = (baseCssLineWidth * dpr) * (0.6 + 0.8 * pressure);
+            currentStroke.points.push({ x: p.x, y: p.y, pressure });
+            const dpr = window.devicePixelRatio || 1;
+            ctx.lineWidth = (currentStroke.baseCssLineWidth * dpr) * (0.6 + 0.8 * pressure);
             ctx.lineTo(p.x, p.y);
-            lastX = p.x;
-            lastY = p.y;
+            lastX = p.x; lastY = p.y;
         }
         ctx.stroke();
     });
@@ -313,6 +355,11 @@
             try { canvas.releasePointerCapture(e.pointerId); } catch (err) {}
             return;
         }
+        // finish stroke
+        if (currentStroke && currentStroke.points.length > 0) {
+            strokes.push(currentStroke);
+            currentStroke = null;
+        }
         drawing = false;
         try { canvas.releasePointerCapture(activePointerId); } catch (err) {}
         activePointerId = null;
@@ -322,24 +369,28 @@
     canvas.addEventListener('pointerup', (e) => endPointer(e));
     canvas.addEventListener('pointercancel', (e) => endPointer(e));
 
+    // フォーカス喪失時の安全策
     window.addEventListener('blur', () => {
         if (drawing) {
             drawing = false;
             activePointerId = null;
+            currentStroke = null;
             ctx.closePath();
         }
     });
 
-    function refreshStrokeFromCSS() {
-        const strokeColor = getComputedStyle(document.documentElement).getPropertyValue('--stroke').trim();
-        if (strokeColor) ctx.strokeStyle = strokeColor;
-    }
-    refreshStrokeFromCSS();
-    const mo = new MutationObserver(() => refreshStrokeFromCSS());
+    // テーマが切り替わったら stroke 色を更新して再描画（MutationObserver）
+    const mo = new MutationObserver(() => {
+        refreshStrokeFromCSS();
+        redrawAll();
+        // also update mode button icon color
+        updateModeButtonUI();
+    });
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
+    // 初期ユーザーエージェントログ
     console.log('UserAgent:', navigator.userAgent);
-  })();
-  </script>
+})();
+</script>
 </body>
 </html>
