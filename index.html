@@ -30,7 +30,20 @@
       --toolbar-shadow: rgba(0,0,0,0.7);
       --toolbar-border: rgba(255,255,255,0.06);
     }
-
+    #themeBtn.active {
+    background: rgba(255,255,255,0.06);    /* 既存の薄い背景は維持 */
+    color: var(--button-fore);
+    transform: none;
+    border-color: rgba(0,0,0,0.06);
+    /* 自然な落ち影（ライト用） */
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    }
+    [data-theme="dark"] #themeBtn.active {
+    background: rgba(255,255,255,0.03);
+    color: var(--button-fore);
+    border-color: rgba(255,255,255,0.04);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
     html,body { height:100%; margin:0; }
     body {
       margin: 0;
@@ -95,16 +108,34 @@
 
     button i.bx { font-size: 22px; line-height:1; display:block; }
 
-    button:focus { box-shadow: 0 8px 26px rgba(10,120,212,0.18); transform: translateY(-2px) scale(1.02); }
-    button:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
-
-    #modeBtn.active {
-    background: var(--button-active-bg); /* 既に定義済みの青を使う */
-    border-color: rgba(255,255,255,0.12);
-    box-shadow: 0 14px 36px rgba(0,120,212,0.18);
-    transform: scale(1.05);
+    button:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.12) !important;
     }
-
+    button:active {
+    transform: none !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08) !important;
+    }
+    button:focus-visible {
+    outline: 2px solid rgba(10,120,212,0.18); /* 色は好みで調整可 */
+    outline-offset: 4px;
+    /* 必要なら軽いシャドウは残す（アニメーションは無し） */
+    box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+    }
+    /* もしボタン hover にも青みが残るなら hover の shadow も中性化 */
+    button:focus {
+    transform: inherit; /* hoverの設定を引き継げるようにする */
+    }
+    #modeBtn.active {
+    background: var(--button-active-bg);
+    border-color: rgba(255,255,255,0.12);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.20); /* 常時の落ち影はニュートラルに */
+    transform: none; /* active（ON）で勝手に拡大されないようにする */
+    }
+    #modeBtn.active:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 14px 36px rgba(0,0,0,0.24);
+    }
     /* アイコン自体は置き換えないので、色は inherit（親の color）を使う */
     #modeBtn i.bx {
       color: inherit;
@@ -121,6 +152,8 @@
     <button id="themeBtn" title="テーマ切替" aria-pressed="false" aria-label="テーマ切替"><i class="bx bx-moon"></i></button>
     <small id="hint" aria-hidden="true">ペンのみモード / テーマ切替</small>
   </div>
+
+  
 
   <canvas id="board" aria-label="描画領域"></canvas>
 
@@ -390,6 +423,79 @@
 
     // 初期ユーザーエージェントログ
     console.log('UserAgent:', navigator.userAgent);
+
+    const pageIndicator = document.getElementById('pageIndicator');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+
+    let currentPage = 1;
+    const maxPages = 2; // とりあえず2ページ設定
+    // ページごとの履歴を保存するオブジェクト
+    let notebook = {
+        1: [],
+        2: []
+    };
+
+    // 背景画像の設定（ファイル名は適宜変えてください）
+    const bgImages = {
+        1: 'page1.png', 
+        2: 'page2.png'
+    };
+
+    function updatePage() {
+        // 現在の描画を今のページに保存
+        // ( strokes は現在表示中の履歴 )
+        
+        // UI更新
+        pageIndicator.textContent = currentPage;
+        canvas.style.backgroundImage = `url(${bgImages[currentPage]})`;
+        canvas.style.backgroundSize = 'contain';
+        canvas.style.backgroundRepeat = 'no-repeat';
+        canvas.style.backgroundPosition = 'center';
+
+        // そのページの履歴を読み込んで再描画
+        strokes = notebook[currentPage] || [];
+        redrawAll();
+    }
+
+    // ページ切り替えイベント
+    prevBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            notebook[currentPage] = [...strokes]; // 保存
+            currentPage--;
+            updatePage();
+        }
+    });
+
+    nextBtn.addEventListener('click', () => {
+        if (currentPage < maxPages) {
+            notebook[currentPage] = [...strokes]; // 保存
+            currentPage++;
+            updatePage();
+        }
+    });
+
+    // --- 既存の pointerdown 内を少し修正 ---
+    canvas.addEventListener('pointerdown', (e) => {
+        activePointers.set(e.pointerId, e);
+        if (activePointers.size >= 2) {
+            drawing = false;
+            currentStroke = null;
+            // ... ズーム処理 ...
+            return;
+        }
+        if (isPenOnly && e.pointerType !== 'pen') return;
+        
+        drawing = true;
+        const p = toCanvasPos(e.clientX, e.clientY);
+        currentStroke = { points: [{ x: p.x, y: p.y, pressure: e.pressure }] };
+    });
+
+    // ... その他の redrawAll や resize 関数 ...
+    // ※ redrawAll の中で `strokes` を参照していれば、ページ切り替え時に自動で書き換わります。
+    
+    // 初回起動
+    updatePage();
 })();
 </script>
 </body>
