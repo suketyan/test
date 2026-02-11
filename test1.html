@@ -98,17 +98,15 @@
 
     async function recognizeHandwriting(strokesData) {
         if (strokesData.length === 0) return [];
-
-        // 座標の整数化
+    
         const ink = strokesData.map(s => [
             s.points.map(p => Math.round(p.x)),
             s.points.map(p => Math.round(p.y))
         ]);
-
-        // 【重要】URLを最新のGoogle手書きAPIの形式に更新
-        // itcを ja-t-i0-handwriting にし、さらに必要なパラメータを追加
-        const url = `https://inputtools.google.com/request?itc=ja-t-i0-handwriting&app=test`;
-
+    
+        // URLを簡略化し、APIエンドポイントを直接指定
+        const url = "https://inputtools.google.com/request?itc=ja-t-i0-handwriting&app=demopage";
+    
         try {
             const response = await fetch(url, {
                 method: 'POST',
@@ -116,29 +114,30 @@
                 body: JSON.stringify({
                     "input_type": "0",
                     "requests": [{
-                        "writing_guide": { "width": canvas.width, "height": canvas.height },
+                        "writing_guide": {
+                            "writing_area_width": canvas.width,
+                            "writing_area_height": canvas.height
+                        },
                         "ink": ink,
                         "language": "ja"
                     }]
                 })
-            });
+        });
 
-            const data = await response.json();
-            console.log("AIの生応答:", data);
+        const data = await response.json();
+        console.log("AIの生応答:", data);
 
-            // 応答の形式を確認しながらデータを抽出
-            if (data && data[0] === "SUCCESS" && data[1] && data[1][0] && data[1][0][1]) {
-                return data[1][0][1]; 
-            } else if (data && data[1] && data[1][0] && data[1][0][1]) {
-                // 形式が違うパターンにも対応
-                return data[1][0][1];
-            }
-        } catch (e) {
-            console.error("APIエラー:", e);
+        // 成功時のレスポンス形式 ["SUCCESS", [["candidates", ["亜", "西", ...]]]] に対応
+        if (data && data[0] === "SUCCESS") {
+            return data[1][0][1];
+        } else if (data && data[1] && data[1][0] && data[1][0][1]) {
+            return data[1][0][1];
         }
-        return [];
+    } catch (e) {
+        console.error("API接続エラー:", e);
     }
-
+    return [];
+}
     // 3. 判定
     async function checkAnswer() {
         const btn = document.getElementById('checkBtn');
