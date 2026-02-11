@@ -104,8 +104,8 @@
             s.points.map(p => Math.round(p.y))
         ]);
     
-        // URLを簡略化し、APIエンドポイントを直接指定
-        const url = "https://inputtools.google.com/request?itc=ja-t-i0-handwriting&app=demopage";
+        // パラメータを最新の安定版(demopage用)に更新
+        const url = "https://inputtools.google.com/request?itc=ja-t-i0-handwriting&app=demopage&device=desktop";
     
         try {
             const response = await fetch(url, {
@@ -122,22 +122,21 @@
                         "language": "ja"
                     }]
                 })
-        });
-
-        const data = await response.json();
-        console.log("AIの生応答:", data);
-
-        // 成功時のレスポンス形式 ["SUCCESS", [["candidates", ["亜", "西", ...]]]] に対応
-        if (data && data[0] === "SUCCESS") {
-            return data[1][0][1];
-        } else if (data && data[1] && data[1][0] && data[1][0][1]) {
-            return data[1][0][1];
+            });
+    
+            const data = await response.json();
+            console.log("AIの生応答:", data);
+    
+            // 応答の形式に合わせて抽出
+            if (data && data[0] === "SUCCESS" && data[1] && data[1][0] && data[1][0][1]) {
+                return data[1][0][1];
+            }
+        } catch (e) {
+            console.error("APIエラー:", e);
         }
-    } catch (e) {
-        console.error("API接続エラー:", e);
+        return [];
     }
-    return [];
-}
+    
     // 3. 判定
     async function checkAnswer() {
         const btn = document.getElementById('checkBtn');
