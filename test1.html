@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>AI漢字先生 - プロトタイプ</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        :root{
+            --bg-page: #f0f0f0; --toolbar-bg: rgba(240,240,240,0.6); --toolbar-fore: #111;
+            --button-bg: rgba(255,255,255,0.4); --button-fore: #333; --button-active-bg: rgba(0,120,212,0.5);
+            --canvas-bg: #ffffff; --stroke: #333; --toolbar-shadow: rgba(0,0,0,0.1); --toolbar-border: rgba(255,255,255,0.35);
+        }
+        [data-theme="dark"]{
+            --bg-page: #0f1113; --toolbar-bg: rgba(18,20,22,0.86); --toolbar-fore: #eef3ff;
+            --button-bg: rgba(255,255,255,0.04); --button-fore: #e6eef8; --button-active-bg: rgba(10,130,230,0.25);
+            --canvas-bg: #0b0c0e; --stroke: #e6eef8; --toolbar-shadow: rgba(0,0,0,0.7); --toolbar-border: rgba(255,255,255,0.06);
+        }
+        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+        html,body { height:100%; margin:0; overflow: hidden; background: var(--bg-page); font-family: system-ui, sans-serif; touch-action: none; }
+        canvas { background: var(--canvas-bg); cursor: crosshair; display:block; }
+
+        /* Toolbar */
+        .toolbar {
+            padding: 12px; display: flex; gap: 16px; position: fixed; top: 20px; left: 20px; z-index: 200;
+            border-radius: 18px; background: var(--toolbar-bg); align-items: center;
+            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 12px 30px var(--toolbar-shadow); border: 1px solid var(--toolbar-border);
+        }
+        button {
+            background: var(--button-bg); border: none; width: 56px; height: 56px; border-radius: 50%;
+            color: var(--button-fore); font-size: 24px; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: transform 0.2s;
+        }
+        button:active { transform: scale(0.9); }
+        #modeBtn.active { background: var(--button-active-bg); }
+
+        /* Quest Display */
+        #quest-area {
+            position: fixed; top: 120px; left: 50%; transform: translateX(-50%);
+            text-align: center; pointer-events: none; z-index: 10;
+        }
+        #target-kanji { font-size: 150px; color: var(--stroke); opacity: 0.12; font-weight: bold; }
+        #status-info { color: var(--button-fore); font-size: 18px; margin-top: 10px; background: var(--toolbar-bg); padding: 5px 15px; border-radius: 20px; }
+
+        /* Floating Check Button */
+        #checkBtn { background: #4caf50; color: white; position: fixed; bottom: 30px; right: 30px; width: 80px; height: 80px; font-size: 32px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+    </style>
+</head>
+<body>
+
+<div class="toolbar">
+    <button id="clearBtn"><i class='bx bx-trash'></i></button>
+    <button id="eraserBtn"><i class='bx bx-eraser'></i></button>
+    <button id="modeBtn"><i class='bx bx-pencil'></i></button>
+    <button id="themeBtn"><i class='bx bx-moon'></i></button>
+</div>
+
+<div id="quest-area">
+    <div id="target-kanji">...</div>
+    <div id="status-info">
+        目標: <span id="target-strokes">-</span> 画 / 現在: <span id="current-strokes">0</span> 画
+    </div>
+</div>
+
+<button id="checkBtn"><i class='bx bx-check'></i></button>
+
+<canvas id="board"></canvas>
+
+<script>
+(function () {
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const targetDisplay = document.getElementById('target-kanji');
+    const targetStrokesDisp = document.getElementById('target-strokes');
+    const currentStrokesDisp = document.getElementById('current-strokes');
+    
+    let isEraserMode = false, isPenOnly = false, drawing = false;
+    let strokes = [], currentStroke = null;
+    let kanjiMasterData = {};
+    let targetKanji = "";
+    let userStrokeCount = 0;
+
+    // 1. JSONデータの読み込み
+    async function loadData() {
+        try {
+            // Live Server環境でも確実に読み込むために相対パスを指定
+            const response = await fetch('./common_kanji.json');
+            if (!response.ok) throw new Error('JSON not found');
+            kanjiMasterData = await response.json();
+            nextQuestion();
+        } catch (e) {
+            console.error(e);
+            targetDisplay.innerText = "Error";
+            alert("common_kanji.jsonが見つかりません。Pythonで作成したファイルをHTMLと同じ場所に置いてください。");
+        }
+    }
+
+    async function recognizeHandwriting(strokesData) {
+        if (strokesData.length === 0) return [];
+
+        // 座標の整数化
+        const ink = strokesData.map(s => [
+            s.points.map(p => Math.round(p.x)),
+            s.points.map(p => Math.round(p.y))
+        ]);
+
+        // 【重要】URLを最新のGoogle手書きAPIの形式に更新
+        // itcを ja-t-i0-handwriting にし、さらに必要なパラメータを追加
+        const url = `https://inputtools.google.com/request?itc=ja-t-i0-handwriting&app=test`;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    "input_type": "0",
+                    "requests": [{
+                        "writing_guide": { "width": canvas.width, "height": canvas.height },
+                        "ink": ink,
+                        "language": "ja"
+                    }]
+                })
+            });
+
+            const data = await response.json();
+            console.log("AIの生応答:", data);
+
+            // 応答の形式を確認しながらデータを抽出
+            if (data && data[0] === "SUCCESS" && data[1] && data[1][0] && data[1][0][1]) {
+                return data[1][0][1]; 
+            } else if (data && data[1] && data[1][0] && data[1][0][1]) {
+                // 形式が違うパターンにも対応
+                return data[1][0][1];
+            }
+        } catch (e) {
+            console.error("APIエラー:", e);
+        }
+        return [];
+    }
+
+    // 3. 判定
+    async function checkAnswer() {
+        const btn = document.getElementById('checkBtn');
+        if (userStrokeCount === 0) return;
+
+        btn.disabled = true;
+        btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
+
+        const correctStrokes = kanjiMasterData[targetKanji].s;
+        const candidates = await recognizeHandwriting(strokes.filter(s => !s.isEraser));
+
+        // 判定部分の改造案
+        const isKanjiCorrect = candidates.some(c => c === targetKanji);
+
+        const isStrokeCorrect = (userStrokeCount === correctStrokes);
+
+        if (isKanjiCorrect && isStrokeCorrect) {
+            alert(`【完璧！】✨\n「${targetKanji}」と認識されました！\n画数も ${correctStrokes} 画でバッチリです。`);
+            nextQuestion();
+        } else if (isKanjiCorrect && !isStrokeCorrect) {
+            alert(`【惜しい！】\n字の形は合っていますが、画数が違います。\n目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画\n書き順を確認してみよう。`);
+        } else {
+            const topGuess = candidates.length > 0 ? candidates[0] : "？";
+            alert(`【もっと丁寧に！】\n「${targetKanji}」とは認識されませんでした。\nAIの予測: ${topGuess}\n画数: ${userStrokeCount} / 正解: ${correctStrokes}`);
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = "<i class='bx bx-check'></i>";
+    }
+
+    // 4. 出題
+    function nextQuestion() {
+        clearCanvas();
+        const keys = Object.keys(kanjiMasterData);
+        targetKanji = keys[Math.floor(Math.random() * keys.length)];
+        targetDisplay.innerText = targetKanji;
+        targetStrokesDisp.innerText = kanjiMasterData[targetKanji].s;
+    }
+
+    function clearCanvas() {
+        strokes = [];
+        userStrokeCount = 0;
+        updateStatus();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function updateStatus() {
+        currentStrokesDisp.innerText = userStrokeCount;
+    }
+
+    // --- 描画エンジン ---
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+        if (isPenOnly && e.pointerType !== 'pen') return;
+        drawing = true;
+        const p = getPos(e);
+        currentStroke = { points: [p], isEraser: isEraserMode };
+    });
+
+    canvas.addEventListener('pointermove', (e) => {
+        if (!drawing) return;
+        const p = getPos(e);
+        const last = currentStroke.points[currentStroke.points.length - 1];
+        
+        ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        ctx.globalCompositeOperation = isEraserMode ? 'destination-out' : 'source-over';
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--stroke').trim();
+        ctx.lineWidth = isEraserMode ? 40 : 4;
+        
+        ctx.beginPath();
+        ctx.moveTo(last.x, last.y);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        currentStroke.points.push(p);
+    });
+
+    canvas.addEventListener('pointerup', () => {
+        if (drawing && currentStroke) {
+            strokes.push(currentStroke);
+            if (!isEraserMode) { userStrokeCount++; updateStatus(); }
+        }
+        drawing = false;
+    });
+
+    // --- UI各種 ---
+    function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        clearCanvas(); // リサイズ時はリセット
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    document.getElementById('clearBtn').addEventListener('click', clearCanvas);
+    document.getElementById('eraserBtn').addEventListener('click', () => {
+        isEraserMode = !isEraserMode;
+        document.getElementById('eraserBtn').style.background = isEraserMode ? "var(--button-active-bg)" : "";
+    });
+    document.getElementById('modeBtn').addEventListener('click', () => {
+        isPenOnly = !isPenOnly;
+        document.getElementById('modeBtn').classList.toggle('active', isPenOnly);
+    });
+    document.getElementById('themeBtn').addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            document.getElementById('themeBtn').innerHTML = "<i class='bx bx-moon'></i>";
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            document.getElementById('themeBtn').innerHTML = "<i class='bx bx-sun'></i>";
+        }
+    });
+    document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+
+    loadData();
+})();
+</script>
+</body>
+</html>
