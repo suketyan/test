@@ -146,21 +146,24 @@
         btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
 
         const correctStrokes = kanjiMasterData[targetKanji].s;
-        const candidates = await recognizeHandwriting(strokes.filter(s => !s.isEraser));
-
-        // 判定部分の改造案
-        const isKanjiCorrect = candidates.some(c => c === targetKanji);
-
+        
+        // 1. まず画数だけで一次判定（爆速）
         const isStrokeCorrect = (userStrokeCount === correctStrokes);
 
+        // 2. AI判定を試みる
+        const candidates = await recognizeHandwriting(strokes.filter(s => !s.isEraser));
+        const isKanjiCorrect = candidates.includes(targetKanji);
+
+        // --- 判定ロジック ---
         if (isKanjiCorrect && isStrokeCorrect) {
-            alert(`【完璧！】✨\n「${targetKanji}」と認識されました！\n画数も ${correctStrokes} 画でバッチリです。`);
+            alert(`【完璧！】✨\nAIも「${targetKanji}」と認めました！\n画数もバッチリです。`);
             nextQuestion();
-        } else if (isKanjiCorrect && !isStrokeCorrect) {
-            alert(`【惜しい！】\n字の形は合っていますが、画数が違います。\n目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画\n書き順を確認してみよう。`);
+        } else if (isStrokeCorrect) {
+            // APIがエラー（INVALID）を返しても、画数が合っていれば正解とする救済ルート
+            alert(`【画数正解！】✅\nAI判定は不安定ですが、画数は ${correctStrokes} 画で合っています！\n自分の書いた字を見て合っていたら次に進もう。`);
+            nextQuestion();
         } else {
-            const topGuess = candidates.length > 0 ? candidates[0] : "？";
-            alert(`【もっと丁寧に！】\n「${targetKanji}」とは認識されませんでした。\nAIの予測: ${topGuess}\n画数: ${userStrokeCount} / 正解: ${correctStrokes}`);
+            alert(`【惜しい！】\n画数が違います。目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画\n落ち着いて書いてみよう。`);
         }
 
         btn.disabled = false;
