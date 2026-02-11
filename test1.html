@@ -146,32 +146,21 @@
         btn.disabled = true;
         btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
     
-        // JSONから正解の画数を取得
         const correctStrokes = kanjiMasterData[targetKanji].s;
-        
-        // AI判定を試みる（動けばラッキー、ダメなら無視）
-        let candidates = [];
-        try {
-            candidates = await recognizeHandwriting(strokes.filter(s => !s.isEraser));
-        } catch (e) {
-            console.warn("AI判定をスキップします");
-        }
-    
-        const isKanjiCorrect = candidates.includes(targetKanji);
         const isStrokeCorrect = (userStrokeCount === correctStrokes);
     
-        // --- 判定ロジック ---
-        if (isKanjiCorrect && isStrokeCorrect) {
-            alert(`【完璧！】✨\nAI判定も画数も一致しました！`);
-            nextQuestion();
-        } else if (isStrokeCorrect) {
-            // APIが死んでいる時のためのメインロジック
-            alert(`【合格！】✅\n画数は ${correctStrokes} 画でピッタリです。\n(現在AI判定はメンテナンス中ですが、画数が合っているので正解とします)`);
-            nextQuestion();
+        // AI判定が死んでいるので、透明度を上げてお手本をハッキリ表示させる
+        targetDisplay.style.opacity = "0.8";
+    
+        if (isStrokeCorrect) {
+            // 画数が合っていれば「自己確認」を促す
+            const ok = confirm(`【画数正解！】\n目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画\nお手本を表示しました。自分の字と合っていますか？`);
+            if (ok) nextQuestion();
         } else {
-            alert(`【画数が違います】\n目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画\nもう一度、書き順を意識して書いてみよう！`);
+            alert(`【画数が違います】\n目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画\nもう一度、丁寧に書いてみましょう。`);
         }
     
+        targetDisplay.style.opacity = "0.12"; // お手本を薄く戻す
         btn.disabled = false;
         btn.innerHTML = "<i class='bx bx-check'></i>";
     }
