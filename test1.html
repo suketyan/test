@@ -81,106 +81,122 @@
     let targetKanji = "";
     let userStrokeCount = 0;
 
-    // 1. JSONデータの読み込み
+    // --- 【NEW】AI判定用の設定 ---
+    // ここに後でキーを入れます
+    const GEMINI_API_KEY = "AIzaSyDiviqxp6sY_r1LOZqPfCE0MRpJtwafQmQ"; 
+
     async function loadData() {
         try {
-            // Live Server環境でも確実に読み込むために相対パスを指定
             const response = await fetch('./common_kanji.json');
             if (!response.ok) throw new Error('JSON not found');
             kanjiMasterData = await response.json();
             nextQuestion();
         } catch (e) {
             console.error(e);
-            targetDisplay.innerText = "Error";
-            alert("common_kanji.jsonが見つかりません。Pythonで作成したファイルをHTMLと同じ場所に置いてください。");
+            alert("JSON読み込み失敗。");
         }
     }
 
-    async function recognizeHandwriting(strokesData) {
-        if (strokesData.length === 0) return [];
-    
-        const ink = strokesData.map(s => [
-            s.points.map(p => Math.round(p.x)),
-            s.points.map(p => Math.round(p.y))
-        ]);
-    
-        // パラメータを最新の安定版(demopage用)に更新
-        const url = "https://inputtools.google.com/request?itc=ja-t-i0-handwriting&app=demopage&device=desktop";
-    
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    "input_type": "0",
-                    "requests": [{
-                        "writing_guide": {
-                            "writing_area_width": canvas.width,
-                            "writing_area_height": canvas.height
-                        },
-                        "ink": ink,
-                        "language": "ja"
-                    }]
-                })
-            });
-    
-            const data = await response.json();
-            console.log("AIの生応答:", data);
-            
-            // 【実験用】もしINVALIDが出たら、強制的に正解フラグを立ててみる
-            if (data[0] === "INVALID_INPUT_METHOD_NAME") {
-                console.warn("API死亡中：デバッグ用ダミーデータを返します");
-                return [targetKanji]; 
-            }
-        } catch (e) {
-            console.error("APIエラー:", e);
-        }
-        return [];
+    // --- 【NEW】キャンバスを画像(Base64)に変換 ---
+    function getCanvasImageBase64() {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tempCtx = tempCanvas.getContext('2d');
+        tempCtx.fillStyle = "#ffffff"; // 背景を白にする
+        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tempCtx.drawImage(canvas, 0, 0);
+        return tempCanvas.toDataURL('image/jpeg').split(',')[1];
+        // --- デバッグ用：AIに送る直前の画像を画面に表示する ---
+        const debugImg = document.getElementById('debug-preview') || document.createElement('img');
+        debugImg.id = 'debug-preview';
+        debugImg.src = 'data:image/jpeg;base64,' + tempCanvas.toDataURL('image/jpeg').split(',')[1];
+        debugImg.style = "position:fixed; bottom:120px; left:20px; width:150px; border:2px solid red; z-index:1000;";
+        if (!document.getElementById('debug-preview')) document.body.appendChild(debugImg);
+        // --------------------------------------------------
     }
-    
-    // 3. 判定
+
+    // --- 【NEW】Gemini AIによる画像判定 ---
+    async function recognizeWithGemini(base64Image) {
+        const url = `curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
+        -H 'Content-Type: application/json' \
+        -H 'X-goog-api-key: AIzaSyDiviqxp6sY_r1LOZqPfCE0MRpJtwafQmQ' \
+        -X POST \
+        -d '{
+            "contents": [
+            {
+                "parts": [
+                {
+                    "text": "Explain how AI works in a few words"
+                }
+                ]
+            }
+            ]
+        }'`;
+        
+        const prompt = {
+            "contents": [{
+                "parts": [
+                    { "text": `あなたは漢字の先生です。画像を見て、これが「${targetKanji}」という漢字か判定してください。
+                    必ず次のJSON形式で返答してください。JSON以外の文章は書かないでください。
+                    {"is_correct": true, "reason": "ここに理由を簡潔に"}` },
+                    { "inline_data": { "mime_type": "image/jpeg", "data": base64Image } }
+                ]
+            }],
+            "generationConfig": { "response_mime_type": "application/json" } // JSONで返せと強制する設定
+        };
+
+        try {
+            const response = await fetch(url, { method: 'POST', body: JSON.stringify(prompt) });
+            const text = await response.text(); // 一旦テキストとして受け取る
+            console.log("AIからの生の返答:", text);
+
+            if (!text) throw new Error("返答が空です");
+
+            const data = JSON.parse(text);
+            
+            // candidates[0].content.parts[0].text の中身を取り出す
+            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                return JSON.parse(data.candidates[0].content.parts[0].text);
+            }
+            
+            throw new Error("有効な回答が得られませんでした");
+
+        } catch (e) {
+            console.error("解析エラー詳細:", e);
+            // エラー時は「判定不能」として返す
+            return { is_correct: false, reason: "AI判定に失敗しました（" + e.message + "）" };
+        }
+    }
+
+    // 判定処理
     async function checkAnswer() {
         const btn = document.getElementById('checkBtn');
         if (userStrokeCount === 0) return;
-    
+
         btn.disabled = true;
         btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
-    
+
         const correctStrokes = kanjiMasterData[targetKanji].s;
-        const isStrokeCorrect = (userStrokeCount === correctStrokes);
-    
-        // AI判定が死んでいるので、透明度を上げてお手本をハッキリ表示させる
-        targetDisplay.style.opacity = "0.8";
-    
-        if (isStrokeCorrect) {
-            // 画数が合っていれば「自己確認」を促す
-            const ok = confirm(`【画数正解！】\n目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画\nお手本を表示しました。自分の字と合っていますか？`);
-            if (ok) nextQuestion();
+        const base64Image = getCanvasImageBase64();
+        
+        // AIに画像判定を依頼
+        const result = await recognizeWithGemini(base64Image);
+
+        if (result.is_correct && userStrokeCount === correctStrokes) {
+            alert(`【合格！】✨\nAIの評価: 正解\n理由: ${result.reason}`);
+            nextQuestion();
         } else {
-            alert(`【画数が違います】\n目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画\nもう一度、丁寧に書いてみましょう。`);
+            alert(`【不合格】\nAIの評価: ${result.is_correct ? "形はOK" : "NG"}\n理由: ${result.reason}\n(目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画)`);
         }
-    
-        targetDisplay.style.opacity = "0.12"; // お手本を薄く戻す
+
         btn.disabled = false;
         btn.innerHTML = "<i class='bx bx-check'></i>";
-
-        // 画数チェックの前に、書いた範囲が小さすぎないかチェックする
-        function isDrawingValid(strokesData) {
-            if (strokesData.length === 0) return false;
-            
-            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-            strokesData.forEach(s => s.points.forEach(p => {
-                minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
-                minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
-            }));
-        
-            const width = maxX - minX;
-            const height = maxY - minY;
-            
-            // キャンバスの15%以下の大きさなら「小さすぎ」と判定
-            return (width > canvas.width * 0.15 && height > canvas.height * 0.15);
-        }
     }
+
+    // --- 以下、描画ロジックなどはそのまま ---
+    // (出題、クリア、ポインターイベント、UI設定などをここに維持)
+    // ※文字数制限のため省略していますが、以前のコードの後半部分を繋げてください
 
     // 4. 出題
     function nextQuestion() {
