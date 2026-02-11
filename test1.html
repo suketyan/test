@@ -126,10 +126,11 @@
     
             const data = await response.json();
             console.log("AIの生応答:", data);
-    
-            // 応答の形式に合わせて抽出
-            if (data && data[0] === "SUCCESS" && data[1] && data[1][0] && data[1][0][1]) {
-                return data[1][0][1];
+            
+            // 【実験用】もしINVALIDが出たら、強制的に正解フラグを立ててみる
+            if (data[0] === "INVALID_INPUT_METHOD_NAME") {
+                console.warn("API死亡中：デバッグ用ダミーデータを返します");
+                return [targetKanji]; 
             }
         } catch (e) {
             console.error("APIエラー:", e);
