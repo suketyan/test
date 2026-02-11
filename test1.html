@@ -81,10 +81,7 @@
     let targetKanji = "";
     let userStrokeCount = 0;
 
-    // --- 【NEW】AI判定用の設定 ---
-    // ここに後でキーを入れます
-    const GEMINI_API_KEY = "AIzaSyDiviqxp6sY_r1LOZqPfCE0MRpJtwafQmQ"; 
-
+    // --- load kanji data (assumes common_kanji.json is present) ---
     async function loadData() {
         try {
             const response = await fetch('./common_kanji.json');
@@ -97,75 +94,46 @@
         }
     }
 
-    // --- 【NEW】キャンバスを画像(Base64)に変換 ---
+    // --- create a reasonably sized JPEG base64 from canvas (reduces payload) ---
     function getCanvasImageBase64() {
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tempCtx = tempCanvas.getContext('2d');
-        tempCtx.fillStyle = "#ffffff"; // 背景を白にする
-        tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        tempCtx.drawImage(canvas, 0, 0);
-        return tempCanvas.toDataURL('image/jpeg').split(',')[1];
-        // --- デバッグ用：AIに送る直前の画像を画面に表示する ---
-        const debugImg = document.getElementById('debug-preview') || document.createElement('img');
-        debugImg.id = 'debug-preview';
-        debugImg.src = 'data:image/jpeg;base64,' + tempCanvas.toDataURL('image/jpeg').split(',')[1];
-        debugImg.style = "position:fixed; bottom:120px; left:20px; width:150px; border:2px solid red; z-index:1000;";
-        if (!document.getElementById('debug-preview')) document.body.appendChild(debugImg);
-        // --------------------------------------------------
+        // create a temporary canvas to scale down the image if needed
+        const maxDim = 1024; // tune as needed to limit size
+        const srcW = canvas.width;
+        const srcH = canvas.height;
+        const scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+        const tmp = document.createElement('canvas');
+        tmp.width = Math.round(srcW * scale);
+        tmp.height = Math.round(srcH * scale);
+        const tctx = tmp.getContext('2d');
+        // fill background white to avoid transparent background
+        tctx.fillStyle = "#ffffff";
+        tctx.fillRect(0, 0, tmp.width, tmp.height);
+        tctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
+        // return base64 without data URL prefix
+        return tmp.toDataURL('image/jpeg', 0.7).split(',')[1];
     }
 
-    // --- 【NEW】Gemini AIによる画像判定 ---
-    async function recognizeWithGemini(base64Image) {
-        const url = `curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
-        -H 'Content-Type: application/json' \
-        -H 'X-goog-api-key: AIzaSyDiviqxp6sY_r1LOZqPfCE0MRpJtwafQmQ' \
-        -X POST \
-        -d '{
-            "contents": [
-            {
-                "parts": [
-                {
-                    "text": "Explain how AI works in a few words"
-                }
-                ]
-            }
-            ]
-        }'`;
-        
-        const prompt = {
-            "contents": [{
-                "parts": [
-                    { "text": `あなたは漢字の先生です。画像を見て、これが「${targetKanji}」という漢字か判定してください。
-                    必ず次のJSON形式で返答してください。JSON以外の文章は書かないでください。
-                    {"is_correct": true, "reason": "ここに理由を簡潔に"}` },
-                    { "inline_data": { "mime_type": "image/jpeg", "data": base64Image } }
-                ]
-            }],
-            "generationConfig": { "response_mime_type": "application/json" } // JSONで返せと強制する設定
-        };
-
+    // --- call your Express server which proxies to Generative API ---
+    async function recognizeWithServer(base64Image, targetKanji) {
         try {
-            const response = await fetch(url, { method: 'POST', body: JSON.stringify(prompt) });
-            const text = await response.text(); // 一旦テキストとして受け取る
-            console.log("AIからの生の返答:", text);
-
-            if (!text) throw new Error("返答が空です");
-
-            const data = JSON.parse(text);
-            
-            // candidates[0].content.parts[0].text の中身を取り出す
-            if (data.candidates && data.candidates[0].content.parts[0].text) {
-                return JSON.parse(data.candidates[0].content.parts[0].text);
+            const resp = await fetch('/api/recognize', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageBase64: base64Image, targetKanji })
+            });
+            if (!resp.ok) {
+                const txt = await resp.text();
+                console.error('server returned error', resp.status, txt);
+                return { is_correct: false, reason: 'サーバーエラー' };
             }
-            
-            throw new Error("有効な回答が得られませんでした");
-
+            const data = await resp.json();
+            // server returns { result: { is_correct, reason } } or { raw: ... }
+            if (data.result) return data.result;
+            // fallback: return raw(with message)
+            return { is_correct: false, reason: data.raw ? ('raw: ' + (typeof data.raw === 'string' ? data.raw.slice(0,200) : JSON.stringify(data.raw).slice(0,200))) : '不明な返答' };
         } catch (e) {
-            console.error("解析エラー詳細:", e);
-            // エラー時は「判定不能」として返す
-            return { is_correct: false, reason: "AI判定に失敗しました（" + e.message + "）" };
+            console.error('recognizeWithServer error', e);
+            return { is_correct: false, reason: '通信エラー' };
         }
     }
 
@@ -180,8 +148,8 @@
         const correctStrokes = kanjiMasterData[targetKanji].s;
         const base64Image = getCanvasImageBase64();
         
-        // AIに画像判定を依頼
-        const result = await recognizeWithGemini(base64Image);
+        // call server proxy
+        const result = await recognizeWithServer(base64Image, targetKanji);
 
         if (result.is_correct && userStrokeCount === correctStrokes) {
             alert(`【合格！】✨\nAIの評価: 正解\n理由: ${result.reason}`);
@@ -195,13 +163,11 @@
     }
 
     // --- 以下、描画ロジックなどはそのまま ---
-    // (出題、クリア、ポインターイベント、UI設定などをここに維持)
-    // ※文字数制限のため省略していますが、以前のコードの後半部分を繋げてください
-
     // 4. 出題
     function nextQuestion() {
         clearCanvas();
         const keys = Object.keys(kanjiMasterData);
+        if (keys.length === 0) return;
         targetKanji = keys[Math.floor(Math.random() * keys.length)];
         targetDisplay.innerText = targetKanji;
         targetStrokesDisp.innerText = kanjiMasterData[targetKanji].s;
@@ -221,6 +187,7 @@
     // --- 描画エンジン ---
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
+        // use CSS coords; canvas uses CSS pixels here (we set width/height equal)
         return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
     }
 
@@ -258,12 +225,12 @@
 
     // --- UI各種 ---
     function resize() {
+        // Use CSS pixel sizes for canvas for simplicity; if you want HiDPI, adapt as earlier examples
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        clearCanvas(); // リサイズ時はリセット
+        clearCanvas(); // リサイズ時はリセット (or you can scale/restore if desired)
     }
-    window.addEventListener('resize', resize);
-    resize();
+    window.addEventListener('resize', resize); resize();
 
     document.getElementById('clearBtn').addEventListener('click', clearCanvas);
     document.getElementById('eraserBtn').addEventListener('click', () => {
