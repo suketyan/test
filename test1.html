@@ -163,6 +163,23 @@
         targetDisplay.style.opacity = "0.12"; // お手本を薄く戻す
         btn.disabled = false;
         btn.innerHTML = "<i class='bx bx-check'></i>";
+
+        // 画数チェックの前に、書いた範囲が小さすぎないかチェックする
+        function isDrawingValid(strokesData) {
+            if (strokesData.length === 0) return false;
+            
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            strokesData.forEach(s => s.points.forEach(p => {
+                minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+                minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+            }));
+        
+            const width = maxX - minX;
+            const height = maxY - minY;
+            
+            // キャンバスの15%以下の大きさなら「小さすぎ」と判定
+            return (width > canvas.width * 0.15 && height > canvas.height * 0.15);
+        }
     }
 
     // 4. 出題
