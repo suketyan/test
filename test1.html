@@ -1,259 +1,362 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
-    <title>AI漢字先生 - プロトタイプ</title>
-    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    <style>
-        :root{
-            --bg-page: #f0f0f0; --toolbar-bg: rgba(240,240,240,0.6); --toolbar-fore: #111;
-            --button-bg: rgba(255,255,255,0.4); --button-fore: #333; --button-active-bg: rgba(0,120,212,0.5);
-            --canvas-bg: #ffffff; --stroke: #333; --toolbar-shadow: rgba(0,0,0,0.1); --toolbar-border: rgba(255,255,255,0.35);
-        }
-        [data-theme="dark"]{
-            --bg-page: #0f1113; --toolbar-bg: rgba(18,20,22,0.86); --toolbar-fore: #eef3ff;
-            --button-bg: rgba(255,255,255,0.04); --button-fore: #e6eef8; --button-active-bg: rgba(10,130,230,0.25);
-            --canvas-bg: #0b0c0e; --stroke: #e6eef8; --toolbar-shadow: rgba(0,0,0,0.7); --toolbar-border: rgba(255,255,255,0.06);
-        }
-        * { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
-        html,body { height:100%; margin:0; overflow: hidden; background: var(--bg-page); font-family: system-ui, sans-serif; touch-action: none; }
-        canvas { background: var(--canvas-bg); cursor: crosshair; display:block; }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>漢字練習 - ダブルタップ完全統一版</title>
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<style>
+:root{
+    --text: #333;
+    --panel: #ffffff;
+    --bg-page: #f8f9fa;
+    --toolbar-bg: rgba(240,240,240,0.6);
+    --toolbar-fore: #111;
+    --button-bg: rgba(255,255,255,0.4);
+    --button-fore: #333;
+    --button-active-bg: rgba(0,120,212,0.5);
+    --canvas-bg: #ffffff;
+    --stroke: #333;
+    --toolbar-shadow: rgba(0,0,0,0.1);
+    --toolbar-border: rgba(255,255,255,0.35);
+    --accent: #0a82e6;
+}
+[data-theme="dark"]{
+    --text: #e6eef8;
+    --panel: #1e2124;
+    --bg-page: #121416;
+    --toolbar-bg: rgba(18,20,22,0.86);
+    --toolbar-fore: #eef3ff;
+    --button-bg: rgba(255,255,255,0.08);
+    --button-fore: #e6eef8; 
+    --button-active-bg: rgba(10,130,230,0.25);
+    --canvas-bg: #0b0c0e;
+    --stroke: #e6eef8;
+    --toolbar-shadow: rgba(0,0,0,0.7);
+    --toolbar-border: rgba(255,255,255,0.06);
+    --accent: #0a82e6;
+}
 
-        /* Toolbar */
-        .toolbar {
-            padding: 12px; display: flex; gap: 16px; position: fixed; top: 20px; left: 20px; z-index: 200;
-            border-radius: 18px; background: var(--toolbar-bg); align-items: center;
-            backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 12px 30px var(--toolbar-shadow); border: 1px solid var(--toolbar-border);
-        }
-        button {
-            background: var(--button-bg); border: none; width: 56px; height: 56px; border-radius: 50%;
-            color: var(--button-fore); font-size: 24px; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: transform 0.2s;
-        }
-        button:active { transform: scale(0.9); }
-        #modeBtn.active { background: var(--button-active-bg); }
+* { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; box-sizing: border-box; }
+html,body { height:100%; margin:0; overflow: hidden; background: var(--bg-page); color: var(--text); }
+body { font-family: system-ui, -apple-system, sans-serif; touch-action: none; -webkit-text-size-adjust: none; }
 
-        /* Quest Display */
-        #quest-area {
-            position: fixed; top: 120px; left: 50%; transform: translateX(-50%);
-            text-align: center; pointer-events: none; z-index: 10;
-        }
-        #target-kanji { font-size: 150px; color: var(--stroke); opacity: 0.12; font-weight: bold; }
-        #status-info { color: var(--button-fore); font-size: 18px; margin-top: 10px; background: var(--toolbar-bg); padding: 5px 15px; border-radius: 20px; }
+.screen-loading{
+    display: flex;
+    background: var(--bg-page);
+    position: fixed;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden; /* 見えないし触れない状態 */
+    transition: opacity 0.25s ease, visibility 0.25s ease;
+    z-index: 100;
+}
+.screen-loading.active{
+    opacity: 1;
+    visibility: visible; /* 見えるし触れる状態 */
+}
 
-        /* Floating Check Button */
-        #checkBtn { background: #4caf50; color: white; position: fixed; bottom: 30px; right: 30px; width: 80px; height: 80px; font-size: 32px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
-    </style>
+.screen {
+    position: absolute;
+    inset: 0;
+    display: none; /* 基本は隠す */
+    flex-direction: column;
+    align-items: center; /* 左右中央 */
+    justify-content: center; /* 上下中央 */
+    gap: 20px;
+    z-index: 10;
+    background: var(--bg-page);
+}
+/* activeクラスがついている時だけ表示 */
+.screen.active {
+    display: flex;
+}
+
+/* メニューカードのスタイル */
+.home-button {
+    width: 85%; max-width: 400px; background: var(--panel); padding: 20px 15px; border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; gap: 20px;
+    border: 2px solid transparent; transition: 0.2s; line-height: 1.2;
+}
+.home-button:hover { border-color: var(--accent); transform: translateY(-2px); }
+.home-button i { font-size: 30px; color: var(--accent); display: flex; align-items: center; justify-content: center; margin-top: -2px;}
+
+canvas { background: var(--canvas-bg); cursor: crosshair; transition: background-color 0.25s ease; }
+
+.toolbar {
+    padding: 12px; display: flex; gap: 16px; position: fixed; top: 20px; left: 20px; z-index: 90;
+    border-radius: 18px; background: var(--toolbar-bg); align-items: center;
+    backdrop-filter: blur(10px) saturate(120%); -webkit-backdrop-filter: blur(10px) saturate(120%);
+    box-shadow: 0 12px 30px var(--toolbar-shadow); border: 1px solid var(--toolbar-border);
+}
+
+button {
+    background: var(--button-bg); border: none; box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    width: 56px; height: 56px; border-radius: 50%; color: var(--button-fore); font-size: 24px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; outline: none;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.tool-btn{
+    display: none;
+}
+
+button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 28px rgba(0,0,0,0.12);
+}
+
+button:focus {
+    transform: scale(0.975);
+    transition: transform 0.1s ease;
+}
+
+button:active {
+    transform: scale(0.975);
+    transition: transform 0.1s ease
+}
+
+@media (hover: hover) { button:hover { transform: scale(1.15); } }
+button:active { transform: scale(0.95); transition: transform 0.1s ease; }
+
+#modeBtn.active { background: var(--button-active-bg); color: var(--button-fore); }
+
+@media (max-width:420px){ 
+    .toolbar { left: 12px; top: 12px; padding: 10px; gap: 12px; }
+    button { width:48px; height:48px; }
+}
+
+
+
+/*一時的なCSS*/
+
+
+
+/* 親要素からはフィルターを消す */
+.home-button.maintenance {
+    opacity: 0.8; /* 全体の透明度は下げてもOK（リボンも少し薄くなるのが嫌なら1にする） */
+    cursor: not-allowed;
+    position: relative;
+    overflow: hidden;
+    /* filter: grayscale(0.8); ← ここにあったのは削除！ */
+}
+
+/* 親が maintenance のとき、中にあるアイコンと文字だけを白黒にする */
+.home-button.maintenance i,
+.home-button.maintenance div {
+    filter: grayscale(1);
+}
+
+/* リボン（::after）の設定はそのまま（フィルターの影響を受けなくなる） */
+.home-button.maintenance::after {
+    content: "メンテナンス中";
+    position: absolute;
+    top: 25px;
+    right: -32.5px;
+    background: #ff4756c7; /* これで鮮やかな赤が維持される！ */
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    text-align: center;
+    padding: 3px 30px;
+    transform: rotate(45deg);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    z-index: 2; /* 念のため一番上に */
+}
+
+/* 開発中カード全体の共通設定 */
+.home-button.development {
+    position: relative;
+    overflow: hidden;
+    cursor: not-allowed;
+}
+
+/* 中身を少し暗く・白黒にして「まだ使えない感」を出す */
+.home-button.development i,
+.home-button.development div {
+    filter: grayscale(1) opacity(0.4);
+    transition: 0.3s ease;
+}
+
+/* 中央に大きく出る文字 */
+.home-button.development::before {
+    background: var(--panel);
+    content: "近日公開...";
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 2px;
+    color: var(--accent); /* テーマカラーの青 */
+    z-index: 5;
+}
+
+/* ホバーした時に少しだけ中身を明るくする演出 */
+.home-button.development:hover i,
+.home-button.development:hover div {
+    filter: grayscale(0.5) opacity(0.7);
+}
+
+</style>
 </head>
-<body>
+<body oncontextmenu="return false;">
+
+<div class="screen-loading" id="screen-loading"></div>
+
+<div class="screen active" id="screen-home">
+    <h1>漢字練習ポータル</h1>
+    <div class="home-button development" onclick="changeScreen('config')"><i class='bx bx-edit-alt'></i><div><h3>リスト管理</h3><p>単語を一括登録</p></div></div>
+    <div class="home-button development" onclick="changeScreen('practice')"><i class='bx bx-book-open'></i><div><h3>リスト練習</h3><p>順番に特訓</p></div></div>
+    <div class="home-button" onclick="changeScreen('free')"><i class='bx bx-palette'></i><div><h3>自由帳</h3><p>自由に書く</p></div></div>
+</div>
 
 <div class="toolbar">
-    <button id="clearBtn"><i class='bx bx-trash'></i></button>
-    <button id="eraserBtn"><i class='bx bx-eraser'></i></button>
-    <button id="modeBtn"><i class='bx bx-pencil'></i></button>
+    <button class="tool-btn" id="clearBtn"><i class='bx bx-trash'></i></button>
+    <button class="tool-btn" id="modeBtn"><i class='bx bx-pencil'></i></button>
+    <button class="tool-btn" id="backBtn" onclick="goHome()"><i class='bx bx-home-alt'></i></button>
     <button id="themeBtn"><i class='bx bx-moon'></i></button>
 </div>
 
-<div id="quest-area">
-    <div id="target-kanji">...</div>
-    <div id="status-info">
-        目標: <span id="target-strokes">-</span> 画 / 現在: <span id="current-strokes">0</span> 画
-    </div>
+<div class="screen" id="screen-canvas">
+    <canvas id="board"></canvas>
 </div>
-
-<button id="checkBtn"><i class='bx bx-check'></i></button>
-
-<canvas id="board"></canvas>
 
 <script>
 (function () {
+    const screen_canvas = document.getElementById('screen-canvas');
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
-    const targetDisplay = document.getElementById('target-kanji');
-    const targetStrokesDisp = document.getElementById('target-strokes');
-    const currentStrokesDisp = document.getElementById('current-strokes');
-    
+    const clearBtn = document.getElementById('clearBtn');
+    const modeBtn = document.getElementById('modeBtn');
+    const themeBtn = document.getElementById('themeBtn');
+
     let isEraserMode = false, isPenOnly = false, drawing = false;
     let strokes = [], currentStroke = null;
-    let kanjiMasterData = {};
-    let targetKanji = "";
-    let userStrokeCount = 0;
+    
+    let tapCount = 0;
+    let tapTimer = null;
 
-    // --- load kanji data (assumes common_kanji.json is present) ---
-    async function loadData() {
-        try {
-            const response = await fetch('./common_kanji.json');
-            if (!response.ok) throw new Error('JSON not found');
-            kanjiMasterData = await response.json();
-            nextQuestion();
-        } catch (e) {
-            console.error(e);
-            alert("JSON読み込み失敗。");
+    const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    function applyTheme(isDark) {
+        if (isDark) { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerHTML = "<i class='bx bx-sun'></i>"; }
+        else { document.documentElement.removeAttribute('data-theme'); themeBtn.innerHTML = "<i class='bx bx-moon'></i>"; }
+        setTimeout(redrawAll, 50);
+    }
+    applyTheme(darkQuery.matches);
+    darkQuery.addEventListener('change', e => applyTheme(e.matches));
+
+    function updateButtonState() {
+        clearBtn.innerHTML = isEraserMode ? "<i class='bx bx-eraser'></i>" : "<i class='bx bx-trash'></i>";
+    }
+
+    window.changeScreen = async function(target) {
+        if (target === 'free') {
+            const screen_loading = document.getElementById('screen-loading');
+            const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+            document.getElementById('screen-loading').classList.add('active');
+            await sleep(250);
+            document.getElementById('screen-loading').classList.remove('active');
+            document.getElementById('screen-home').classList.remove('active');
+            document.querySelectorAll('.tool-btn').forEach(b => b.style.display = 'flex');
+            screen_canvas.classList.add('active');
+            resize()
         }
     }
 
-    // --- create a reasonably sized JPEG base64 from canvas (reduces payload) ---
-    function getCanvasImageBase64() {
-        // create a temporary canvas to scale down the image if needed
-        const maxDim = 1024; // tune as needed to limit size
-        const srcW = canvas.width;
-        const srcH = canvas.height;
-        const scale = Math.min(1, maxDim / Math.max(srcW, srcH));
-        const tmp = document.createElement('canvas');
-        tmp.width = Math.round(srcW * scale);
-        tmp.height = Math.round(srcH * scale);
-        const tctx = tmp.getContext('2d');
-        // fill background white to avoid transparent background
-        tctx.fillStyle = "#ffffff";
-        tctx.fillRect(0, 0, tmp.width, tmp.height);
-        tctx.drawImage(canvas, 0, 0, tmp.width, tmp.height);
-        // return base64 without data URL prefix
-        return tmp.toDataURL('image/jpeg', 0.7).split(',')[1];
+    window.goHome = async function() {
+        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+        document.getElementById('screen-loading').classList.add('active');
+        await sleep(250);
+        document.getElementById('screen-loading').classList.remove('active');
+        document.querySelectorAll('.tool-btn').forEach(b => b.style.display = 'none');
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-home').classList.add('active');
     }
 
-    // --- call your Express server which proxies to Generative API ---
-    async function recognizeWithServer(base64Image, targetKanji) {
-        try {
-            const resp = await fetch('/api/recognize', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageBase64: base64Image, targetKanji })
-            });
-            if (!resp.ok) {
-                const txt = await resp.text();
-                console.error('server returned error', resp.status, txt);
-                return { is_correct: false, reason: 'サーバーエラー' };
-            }
-            const data = await resp.json();
-            // server returns { result: { is_correct, reason } } or { raw: ... }
-            if (data.result) return data.result;
-            // fallback: return raw(with message)
-            return { is_correct: false, reason: data.raw ? ('raw: ' + (typeof data.raw === 'string' ? data.raw.slice(0,200) : JSON.stringify(data.raw).slice(0,200))) : '不明な返答' };
-        } catch (e) {
-            console.error('recognizeWithServer error', e);
-            return { is_correct: false, reason: '通信エラー' };
+    // ダブルタップとシングルクリックの完全なルール化
+    clearBtn.addEventListener('click', () => {
+        tapCount++;
+        if (tapCount === 1) {
+            tapTimer = setTimeout(() => {
+                // シングルクリック：今のモードを実行
+                if (!isEraserMode) {
+                    clearCanvas(); // ゴミ箱モードなら全消去
+                }
+                // 消しゴムモード中のシングルクリックは何もしない（誤爆防止）
+                
+                tapCount = 0;
+            }, 150); // 判定を少し早めてレスポンス向上
+        } else if (tapCount === 2) {
+            // ダブルタップ：常にモードを反転
+            clearTimeout(tapTimer);
+            isEraserMode = !isEraserMode;
+            updateButtonState();
+            tapCount = 0;
+            if (navigator.vibrate) navigator.vibrate(10);
         }
-    }
+    });
 
-    // 判定処理
-    async function checkAnswer() {
-        const btn = document.getElementById('checkBtn');
-        if (userStrokeCount === 0) return;
+    function clearCanvas() { strokes = []; ctx.clearRect(0, 0, canvas.width, canvas.height); }
 
-        btn.disabled = true;
-        btn.innerHTML = "<i class='bx bx-loader-alt bx-spin'></i>";
-
-        const correctStrokes = kanjiMasterData[targetKanji].s;
-        const base64Image = getCanvasImageBase64();
-        
-        // call server proxy
-        const result = await recognizeWithServer(base64Image, targetKanji);
-
-        if (result.is_correct && userStrokeCount === correctStrokes) {
-            alert(`【合格！】✨\nAIの評価: 正解\n理由: ${result.reason}`);
-            nextQuestion();
-        } else {
-            alert(`【不合格】\nAIの評価: ${result.is_correct ? "形はOK" : "NG"}\n理由: ${result.reason}\n(目標: ${correctStrokes}画 / 現在: ${userStrokeCount}画)`);
-        }
-
-        btn.disabled = false;
-        btn.innerHTML = "<i class='bx bx-check'></i>";
-    }
-
-    // --- 以下、描画ロジックなどはそのまま ---
-    // 4. 出題
-    function nextQuestion() {
-        clearCanvas();
-        const keys = Object.keys(kanjiMasterData);
-        if (keys.length === 0) return;
-        targetKanji = keys[Math.floor(Math.random() * keys.length)];
-        targetDisplay.innerText = targetKanji;
-        targetStrokesDisp.innerText = kanjiMasterData[targetKanji].s;
-    }
-
-    function clearCanvas() {
-        strokes = [];
-        userStrokeCount = 0;
-        updateStatus();
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-
-    function updateStatus() {
-        currentStrokesDisp.innerText = userStrokeCount;
-    }
-
-    // --- 描画エンジン ---
     function getPos(e) {
         const rect = canvas.getBoundingClientRect();
-        // use CSS coords; canvas uses CSS pixels here (we set width/height equal)
-        return { x: (e.clientX - rect.left), y: (e.clientY - rect.top) };
+        const dpr = window.devicePixelRatio || 1;
+        return { x: (e.clientX - rect.left) * (canvas.width / rect.width), y: (e.clientY - rect.top) * (canvas.height / rect.height) };
     }
 
     canvas.addEventListener('pointerdown', (e) => {
         if (isPenOnly && e.pointerType !== 'pen') return;
         drawing = true;
-        const p = getPos(e);
-        currentStroke = { points: [p], isEraser: isEraserMode };
+        currentStroke = { points: [getPos(e)], isEraser: isEraserMode };
     });
 
     canvas.addEventListener('pointermove', (e) => {
         if (!drawing) return;
-        const p = getPos(e);
+        const p = getPos(e), pressure = e.pressure || 0.5, dpr = window.devicePixelRatio || 1;
         const last = currentStroke.points[currentStroke.points.length - 1];
-        
         ctx.lineCap = 'round'; ctx.lineJoin = 'round';
         ctx.globalCompositeOperation = isEraserMode ? 'destination-out' : 'source-over';
         ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--stroke').trim();
-        ctx.lineWidth = isEraserMode ? 40 : 4;
-        
         ctx.beginPath();
-        ctx.moveTo(last.x, last.y);
-        ctx.lineTo(p.x, p.y);
-        ctx.stroke();
-        currentStroke.points.push(p);
+        ctx.lineWidth = (isEraserMode ? 40 : 2.5) * dpr * (0.6 + 0.8 * pressure);
+        ctx.moveTo(last.x, last.y); ctx.lineTo(p.x, p.y); ctx.stroke();
+        currentStroke.points.push({ ...p, p: pressure });
     });
 
-    canvas.addEventListener('pointerup', () => {
-        if (drawing && currentStroke) {
-            strokes.push(currentStroke);
-            if (!isEraserMode) { userStrokeCount++; updateStatus(); }
-        }
-        drawing = false;
-    });
+    canvas.addEventListener('pointerup', () => { if (drawing && currentStroke) strokes.push(currentStroke); drawing = false; });
 
-    // --- UI各種 ---
+    function redrawAll() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const dpr = window.devicePixelRatio || 1, color = getComputedStyle(document.documentElement).getPropertyValue('--stroke').trim();
+        strokes.forEach(s => {
+            ctx.globalCompositeOperation = s.isEraser ? 'destination-out' : 'source-over';
+            ctx.strokeStyle = color;
+            for (let i = 1; i < s.points.length; i++) {
+                const prev = s.points[i-1], curr = s.points[i];
+                ctx.beginPath();
+                ctx.lineWidth = (s.isEraser ? 40 : 2.5) * dpr * (0.6 + 0.8 * curr.p);
+                ctx.moveTo(prev.x, prev.y); ctx.lineTo(curr.x, curr.y); ctx.stroke();
+            }
+        });
+    }
+
     function resize() {
-        // Use CSS pixel sizes for canvas for simplicity; if you want HiDPI, adapt as earlier examples
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        clearCanvas(); // リサイズ時はリセット (or you can scale/restore if desired)
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr; canvas.height = window.innerHeight * dpr;
+        canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+        redrawAll();
     }
     window.addEventListener('resize', resize); resize();
 
-    document.getElementById('clearBtn').addEventListener('click', clearCanvas);
-    document.getElementById('eraserBtn').addEventListener('click', () => {
-        isEraserMode = !isEraserMode;
-        document.getElementById('eraserBtn').style.background = isEraserMode ? "var(--button-active-bg)" : "";
-    });
-    document.getElementById('modeBtn').addEventListener('click', () => {
-        isPenOnly = !isPenOnly;
-        document.getElementById('modeBtn').classList.toggle('active', isPenOnly);
-    });
-    document.getElementById('themeBtn').addEventListener('click', () => {
-        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-        if (isDark) {
-            document.documentElement.removeAttribute('data-theme');
-            document.getElementById('themeBtn').innerHTML = "<i class='bx bx-moon'></i>";
-        } else {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            document.getElementById('themeBtn').innerHTML = "<i class='bx bx-sun'></i>";
-        }
-    });
-    document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+    themeBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));
+    modeBtn.addEventListener('click', () => { isPenOnly = !isPenOnly; modeBtn.classList.toggle('active', isPenOnly); });
 
-    loadData();
+    // 一時的なJS
+    
 })();
 </script>
 </body>
