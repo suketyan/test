@@ -406,7 +406,7 @@
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.2);
             z-index: 3000;
             align-items: center;
             justify-content: center;
@@ -500,7 +500,8 @@
             overflow: hidden;
             transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
             border: 1px solid var(--toolbar-border);
-            padding-top: 0; /* ヘッダーが上に来るように */
+            padding-top: 0;
+            /* ヘッダーが上に来るように */
         }
 
         /* 横長画面（PC/タブレット）では横幅を制限してエクスプローラーっぽく */
@@ -512,7 +513,7 @@
                 max-height: 600px;
             }
         }
-        
+
         /* 縦長画面（スマホ）では縦に長く */
         @media (orientation: portrait) {
             #screen-explorer.mini {
@@ -904,7 +905,9 @@
             .result-buttons {
                 flex-direction: column;
             }
-            .btn-retry, .btn-finish {
+
+            .btn-retry,
+            .btn-finish {
                 width: 100%;
             }
         }
@@ -978,18 +981,21 @@
             </div>
         </div>
         <p style="font-size: 12px; opacity: 0.5; margin-top: 40px;">※このサイトはベータ版です。バグなどが起きる可能性があります。</p>
-        
+
         <!-- アカウント連携 UI -->
-        <div id="account-section" style="margin-top: 20px; text-align: center; width: 85%; max-width: 400px; background: var(--panel); padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <div id="account-section"
+            style="margin-top: 20px; text-align: center; width: 85%; max-width: 400px; background: var(--panel); padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
             <div id="user-info" style="display: none; align-items: center; justify-content: space-between; gap: 10px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <img id="user-photo" src="" style="width: 32px; height: 32px; border-radius: 50%; display: none;">
                     <span id="user-name" style="font-size: 14px; font-weight: bold;"></span>
                 </div>
-                <button class="btn-round" onclick="handleLogout()" style="width: 36px; height: 36px; font-size: 16px;"><i class='bx bx-log-out'></i></button>
+                <button class="btn-round" onclick="handleLogout()"
+                    style="width: 36px; height: 36px; font-size: 16px;"><i class='bx bx-log-out'></i></button>
             </div>
             <div id="login-prompt">
-                <button class="btn-round" onclick="handleLogin()" style="width: auto; height: 45px; border-radius: 25px; padding: 0 20px; font-size: 14px; display: inline-flex; gap: 8px;">
+                <button class="btn-round" onclick="handleLogin()"
+                    style="width: auto; height: 45px; border-radius: 25px; padding: 0 20px; font-size: 14px; display: inline-flex; gap: 8px;">
                     <i class='bx bxl-google'></i> Googleでアカウント連携
                 </button>
                 <p style="font-size: 11px; opacity: 0.6; margin-top: 8px;">クラウドにデータを保存し、他端末と同期できます</p>
@@ -1001,7 +1007,8 @@
         <button class="tool-btn btn-round" id="backBtn" onclick="goHome()"><i class='bx bx-home-alt'></i></button>
         <button class="explorer-btn btn-round" id="backExplorerBtn" onclick="goBackExplorer()"><i
                 class='bx bx-arrow-back'></i></button>
-        <button class="explorer-btn btn-round" id="trashBtn" onclick="deleteSelected()" disabled><i class='bx bx-trash'></i></button>
+        <button class="explorer-btn btn-round" id="trashBtn" onclick="deleteSelected()" disabled><i
+                class='bx bx-trash'></i></button>
         <button class="btn-round" id="themeBtn"><i class='bx bx-moon'></i></button>
     </div>
 
@@ -1121,32 +1128,14 @@
     <div id="folder-modal-overlay" class="modal-overlay">
         <div class="modal-content">
             <h3>新しいフォルダ</h3>
-            <input type="text" id="input-folder-name" placeholder="フォルダ名を入力" 
-                   style="width:100%; padding:15px; border-radius:12px; border:2px solid var(--accent); background:var(--bg-page); color:var(--text); margin:20px 0; font-size:18px; outline:none;" />
+            <input type="text" id="input-folder-name" placeholder="フォルダ名を入力"
+                style="width:100%; padding:15px; border-radius:12px; border:2px solid var(--accent); background:var(--bg-page); color:var(--text); margin:20px 0; font-size:18px; outline:none;" />
             <div class="modal-buttons">
                 <button onclick="closeFolderModal()" class="btn-cancel">キャンセル</button>
                 <button onclick="submitFolder()" class="btn-submit">作成</button>
             </div>
         </div>
     </div>
-
-    </div>
-
-    <!-- セキュリティ同意モーダル -->
-    <div id="consent-modal-overlay" class="modal-overlay">
-        <div class="modal-content" style="max-width: 450px;">
-            <i class='bx bxs-error-circle' style="font-size: 60px; color: #ff9800; margin-bottom: 20px;"></i>
-            <h2 style="margin-bottom: 15px;">ご利用前の確認</h2>
-            <p style="text-align: left; line-height: 1.6; font-size: 15px; margin-bottom: 25px;">
-                本アプリはローカルストレージを使用します。GitHub Pages等の公開環境で利用する場合、ブラウザの仕様や設定により<strong>アカウントのデータが漏洩または消去される可能性</strong>があります。<br><br>
-                重要なデータの取り扱いには十分ご注意ください。
-            </p>
-            <div style="margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
-                <input type="checkbox" id="consent-checkbox" style="width: 18px; height: 18px; cursor: pointer;" />
-                <label for="consent-checkbox" style="font-size: 14px; cursor: pointer;">次回から表示しない</label>
-            </div>
-            <button onclick="acceptConsent()" class="btn-submit" style="width: 100%; height: 55px; font-size: 18px;">同意して始める</button>
-        </div>
     </div>
 
     <script type="module">
@@ -1169,10 +1158,10 @@
         const db = getFirestore(app);
         const provider = new GoogleAuthProvider();
 
-        let currentUser = null;
+        window.currentUser = null;
 
         // ログイン処理
-        window.handleLogin = async function() {
+        window.handleLogin = async function () {
             try {
                 const result = await signInWithPopup(auth, provider);
                 console.log("Logged in:", result.user.displayName);
@@ -1183,7 +1172,7 @@
         };
 
         // ログアウト処理
-        window.handleLogout = async function() {
+        window.handleLogout = async function () {
             if (confirm("ログアウトしますか？")) {
                 try {
                     await signOut(auth);
@@ -1194,10 +1183,10 @@
         };
 
         // クラウド保存
-        window.syncToCloud = async function(data) {
-            if (!currentUser) return;
+        window.syncToCloud = async function (data) {
+            if (!window.currentUser) return;
             try {
-                await setDoc(doc(db, "users", currentUser.uid), {
+                await setDoc(doc(db, "users", window.currentUser.uid), {
                     appData: JSON.stringify(data),
                     updatedAt: new Date().toISOString()
                 }, { merge: true });
@@ -1231,7 +1220,7 @@
             const userPhoto = document.getElementById('user-photo');
 
             if (user) {
-                currentUser = user;
+                window.currentUser = user;
                 userInfo.style.display = 'flex';
                 loginPrompt.style.display = 'none';
                 userName.innerText = user.displayName;
@@ -1240,18 +1229,19 @@
                     userPhoto.style.display = 'block';
                 }
 
-                // ログイン時、クラウドにデータがあれば復元するか確認（初回のみなど検討の余地ありだが一旦同期）
+                // ログイン時、クラウドにデータがあれば復元
                 const cloudData = await fetchFromCloud(user.uid);
                 if (cloudData) {
-                    // LocalStorageより新しいかなどの判定は簡易化し、クラウド優先
-                    window.appData = cloudData;
-                    localStorage.setItem('shakai_app_data', JSON.stringify(window.appData));
+                    window.appData.google = cloudData;
                     if (typeof window.renderExplorer === 'function') window.renderExplorer();
                 }
             } else {
-                currentUser = null;
+                window.currentUser = null;
                 userInfo.style.display = 'none';
                 loginPrompt.style.display = 'block';
+                // ログアウト時はGoogle側のデータを空にする（セキュリティ・表示用）
+                window.appData.google = { name: 'Google Storage', folders: [], items: [] };
+                if (typeof window.renderExplorer === 'function') window.renderExplorer();
             }
         });
     </script>
@@ -1259,9 +1249,13 @@
         (function () {
             const themeBtn = document.getElementById('themeBtn');
 
-            window.appData = { folders: [], items: [] };
+            window.appData = {
+                local: { name: 'Local Storage', folders: [], items: [] },
+                google: { name: 'Google Storage', folders: [], items: [] }
+            };
             let currentFolder = null;
-            let pathStack = [];
+            let pathStack = []; // 最初の要素に 'local' か 'google' を入れることで階層を判定
+
 
             let currentPracticeList = [];
             let currentQuestionIndex = 0;
@@ -1336,7 +1330,6 @@
 
                 if (timerInterval) clearInterval(timerInterval);
                 stopConfetti();
-                checkConsent(); // ホームに戻った時に同意を再確認（未確認の場合）
             }
 
             function stopConfetti() {
@@ -1355,43 +1348,33 @@
             themeBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));
 
             async function loadExternalData() {
-                const saved = localStorage.getItem('shakai_app_data');
+                const saved = localStorage.getItem('shakai_app_data_local');
                 if (saved) {
-                    appData = JSON.parse(saved);
+                    appData.local = JSON.parse(saved);
                 } else {
-                    appData = { folders: [], items: [], importedFiles: [] };
+                    // 互換性チェック: 古いデータ形式があれば移行
+                    const oldData = localStorage.getItem('shakai_app_data');
+                    if (oldData) {
+                        appData.local = JSON.parse(oldData);
+                        localStorage.removeItem('shakai_app_data');
+                        saveData();
+                    }
                 }
-
-                if (!appData.importedFiles) appData.importedFiles = [];
                 
-                // ※ Firebase連携を行うため、ローカルのanswers.json自動読み込みは廃止
+                // appData.local に name がなければ付与
+                if (!appData.local.name) appData.local.name = 'Local Storage';
+                if (!appData.google.name) appData.google.name = 'Google Storage';
 
                 renderExplorer();
             }
 
-            window.acceptConsent = function() {
-                const checkbox = document.getElementById('consent-checkbox');
-                if (checkbox.checked) {
-                    localStorage.setItem('shakai_consent_accepted', 'true');
-                }
-                document.getElementById('consent-modal-overlay').style.display = 'none';
-            };
+            window.saveData = function () {
+                // ローカルデータを保存
+                localStorage.setItem('shakai_app_data_local', JSON.stringify(appData.local));
 
-            function checkConsent() {
-                const accepted = localStorage.getItem('shakai_consent_accepted');
-                if (accepted === 'true') {
-                    document.getElementById('consent-modal-overlay').style.display = 'none';
-                } else {
-                    document.getElementById('consent-modal-overlay').style.display = 'flex';
-                }
-            }
-
-            window.saveData = function() {
-                localStorage.setItem('shakai_app_data', JSON.stringify(appData));
-                
-                // ログイン中ならクラウドにも保存
-                if (window.syncToCloud) {
-                    window.syncToCloud(appData);
+                // 現在 Google Storage 階層にいる場合、または一括同期が必要な場合にクラウドへ保存
+                if (pathStack[0] === 'google' && window.syncToCloud) {
+                    window.syncToCloud(appData.google);
                 }
             }
 
@@ -1404,23 +1387,21 @@
                         count = 1; // 個別のファイルを選択した場合
                     }
                 } else {
-                    // 何も選択していない場合は現在のフォルダ（またはルート）の直下の全ての問題数を出す
-                    const target = currentFolder ? currentFolder : appData;
-                    if (target.items) count += target.items.length;
+                    // 何も選択していない場合は現在のターゲット（または仮想ルート）の直下の全ての問題数を出す
+                    const target = currentFolder;
+                    if (target && target.items) count += target.items.length;
                 }
                 document.getElementById('selected-count').innerText = `選択中: ${count}問`;
 
                 const selectBtn = document.getElementById('btn-select-practice');
                 const footer = document.getElementById('explorer-footer');
 
-                // アイテムが選択されている場合のみフッターを下から出す
                 if (selectedItemForPractice) {
                     footer.classList.add('show');
                 } else {
                     footer.classList.remove('show');
                 }
 
-                // 問題数が0なら選択ボタンを押せないようにする
                 if (count === 0) {
                     selectBtn.disabled = true;
                     selectBtn.innerText = "問題なし";
@@ -1429,7 +1410,6 @@
                     selectBtn.innerText = "選択して練習";
                 }
 
-                // ゴミ箱ボタンの制御
                 const trashBtn = document.getElementById('trashBtn');
                 if (trashBtn) {
                     trashBtn.disabled = !selectedItemForPractice;
@@ -1439,20 +1419,38 @@
             function renderExplorer() {
                 const listContainer = document.getElementById('explorer-list');
                 listContainer.innerHTML = '';
-                const target = currentFolder ? currentFolder : appData;
+
+                // pathStack が空の場合はストレージ選択画面（仮想ルート）
+                if (pathStack.length === 0) {
+                    renderStorageSelection();
+                    updateBreadcrumb();
+                    return;
+                }
+
+                const target = currentFolder;
 
                 function updateBreadcrumb() {
                     const breadcrumbContainer = document.querySelector('.breadcrumb');
                     if (!breadcrumbContainer) return;
                     breadcrumbContainer.innerHTML = '';
 
-                    const homeSpan = document.createElement('span');
-                    homeSpan.innerText = 'local storage';
-                    homeSpan.style.cursor = 'pointer';
-                    homeSpan.onclick = () => { currentFolder = null; pathStack = []; renderExplorer(); };
-                    breadcrumbContainer.appendChild(homeSpan);
+                    // 仮想ルート（pathStack空）なら何も表示しない
+                    if (pathStack.length === 0) return;
 
-                    pathStack.forEach((folder, index) => {
+                    const storageKey = pathStack[0];
+                    const storageRoot = appData[storageKey];
+
+                    const rootSpan = document.createElement('span');
+                    rootSpan.innerText = storageRoot.name;
+                    rootSpan.style.cursor = 'pointer';
+                    rootSpan.onclick = () => {
+                        currentFolder = storageRoot;
+                        pathStack = [storageKey];
+                        renderExplorer();
+                    };
+                    breadcrumbContainer.appendChild(rootSpan);
+
+                    pathStack.slice(1).forEach((folder, index) => {
                         if (!folder) return;
                         const icon = document.createElement('i');
                         icon.className = 'bx bx-chevron-right';
@@ -1460,11 +1458,15 @@
                         const span = document.createElement('span');
                         span.innerText = folder.name;
                         span.style.cursor = 'pointer';
-                        span.onclick = () => { currentFolder = folder; pathStack = pathStack.slice(0, index); renderExplorer(); };
+                        span.onclick = () => {
+                            currentFolder = folder;
+                            pathStack = pathStack.slice(0, index + 2);
+                            renderExplorer();
+                        };
                         breadcrumbContainer.appendChild(span);
                     });
 
-                    if (currentFolder) {
+                    if (currentFolder && currentFolder !== storageRoot) {
                         const icon = document.createElement('i');
                         icon.className = 'bx bx-chevron-right';
                         breadcrumbContainer.appendChild(icon);
@@ -1595,6 +1597,53 @@
                 updateSelectedCount();
             }
 
+            function renderStorageSelection() {
+                const listContainer = document.getElementById('explorer-list');
+                const storages = [
+                    { key: 'local', name: 'Local Storage', icon: 'bx-hdd', color: '#607d8b' },
+                    { key: 'google', name: 'Google Storage', icon: 'bxl-google', color: '#4285f4' }
+                ];
+
+                storages.forEach(storage => {
+                    const item = document.createElement('div');
+                    item.className = 'explorer-item storage';
+                    item.innerHTML = `
+                        <i class='bx ${storage.icon}' style="color:${storage.color}; font-size:32px; margin-right:15px;"></i>
+                        <div class="item-info">
+                            <div class="item-name">${storage.name}</div>
+                            <div class="item-sub">ストレージ</div>
+                        </div>
+                        <i class='bx bx-chevron-right'></i>
+                    `;
+                    
+                    let tapCount = 0;
+                    let tapTimer = null;
+                    item.onclick = (e) => {
+                        e.stopPropagation();
+                        tapCount++;
+                        document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
+                        item.classList.add('selected');
+                        
+                        if (tapCount === 1) {
+                            tapTimer = setTimeout(() => { tapCount = 0; }, 250);
+                        } else if (tapCount === 2) {
+                            clearTimeout(tapTimer);
+                            tapCount = 0;
+                            
+                            if (storage.key === 'google' && !window.currentUser) {
+                                alert("Google Storage を利用するにはログインが必要です。");
+                                return;
+                            }
+                            
+                            pathStack = [storage.key];
+                            currentFolder = appData[storage.key];
+                            renderExplorer();
+                        }
+                    };
+                    listContainer.appendChild(item);
+                });
+            }
+
             document.getElementById('explorer-list').onclick = (e) => {
                 document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
                 selectedItemForPractice = null;
@@ -1614,9 +1663,18 @@
             };
 
             window.goBackExplorer = function () {
-                if (pathStack.length > 0) {
-                    currentFolder = pathStack.pop();
+                if (pathStack.length > 1) {
+                    pathStack.pop();
+                    currentFolder = pathStack[pathStack.length - 1];
+                    // もし1層目（'local'とか）なら、appDataから取得
+                    if (pathStack.length === 1) {
+                        currentFolder = appData[pathStack[0]];
+                    }
                     selectedItemForPractice = null;
+                    renderExplorer();
+                } else if (pathStack.length === 1) {
+                    pathStack = [];
+                    currentFolder = null;
                     renderExplorer();
                 } else {
                     goHome();
@@ -1642,7 +1700,7 @@
                 const input = document.getElementById('input-folder-name');
                 input.value = '';
                 input.focus();
-                
+
                 // エンターキーで作成できるようにイベント追加
                 input.onkeydown = (e) => {
                     if (e.key === 'Enter') {
@@ -1759,7 +1817,9 @@
                             items: items
                         };
 
-                        const target = currentFolder ? currentFolder : appData;
+                        const target = currentFolder;
+                        if (!target) { alert("ストレージを選択してからインポートしてください"); return; }
+
                         if (!target.folders) target.folders = [];
                         target.folders.push(newFolder);
 
@@ -1780,8 +1840,10 @@
 
                 // フォルダ内で右クリックせずに選択している場合はそのフォルダ
                 if (!targetItem) {
-                    targetItem = currentFolder ? currentFolder : appData;
+                    targetItem = currentFolder;
                 }
+                if (!targetItem) return;
+
 
                 if (!targetItem.items && !targetItem.folders) {
                     alert("出力できるデータがありません");
@@ -1827,8 +1889,8 @@
                         practiceList = [selectedItemForPractice];
                     }
                 } else {
-                    const target = currentFolder ? currentFolder : appData;
-                    if (target.items && target.items.length > 0) {
+                    const target = currentFolder;
+                    if (target && target.items && target.items.length > 0) {
                         practiceList = target.items;
                     }
                 }
@@ -1916,7 +1978,7 @@
                 if (input === correctAnswer) {
                     // 【ユーザー要望】正解時は文字を出さず、花びら（紙吹雪）だけ出して自動で次の問題へ
                     fireConfetti();
-                    
+
                     // 入力欄をクリアして無効化（連打防止）
                     inputEl.value = '';
                     inputEl.disabled = true;
@@ -1938,7 +2000,7 @@
                 } else {
                     // 間違った場合は今まで通り（正解を表示して「次へ」を待つ）
                     resultMsg.innerHTML = `<span class="result-wrong">不正解...<br><span class="correct-answer-text">正解は「<b>${correctAnswer}</b>」です</span></span><br><span style="font-size:16px; color:var(--text); opacity:0.8;">※次へ進んでください</span>`;
-                    
+
                     document.getElementById('check-btn').style.display = 'none';
                     document.getElementById('next-btn').style.display = 'block';
                     document.getElementById('next-btn').focus();
@@ -2119,9 +2181,6 @@
                     // （キーボードを出しっぱなしにするため）
                 }
             });
-
-            // 初期化の最後に同意を確認
-            checkConsent();
         })();
     </script>
 </body>
