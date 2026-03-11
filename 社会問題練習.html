@@ -1159,6 +1159,10 @@
         const provider = new GoogleAuthProvider();
 
         window.currentUser = null;
+        window.appData = {
+            local: { name: 'Local Storage', folders: [], items: [] },
+            google: { name: 'Google Storage', folders: [], items: [] }
+        };
 
         // ログイン処理
         window.handleLogin = async function () {
@@ -1184,8 +1188,12 @@
 
         // クラウド保存
         window.syncToCloud = async function (data) {
-            if (!window.currentUser) return;
+            if (!window.currentUser) {
+                console.log("No user for syncToCloud - skipping");
+                return;
+            }
             try {
+                console.log("Syncing to cloud for UID:", window.currentUser.uid);
                 await setDoc(doc(db, "users", window.currentUser.uid), {
                     appData: JSON.stringify(data),
                     updatedAt: new Date().toISOString()
@@ -1199,13 +1207,16 @@
         // クラウドから取得
         async function fetchFromCloud(uid) {
             try {
+                console.log("Fetching cloud data for:", uid);
                 const docSnap = await getDoc(doc(db, "users", uid));
                 if (docSnap.exists()) {
                     const cloudData = docSnap.data().appData;
                     if (cloudData) {
+                        console.log("Cloud data found");
                         return JSON.parse(cloudData);
                     }
                 }
+                console.log("No cloud data found");
             } catch (error) {
                 console.error("Fetch from cloud failed:", error);
             }
@@ -1249,10 +1260,8 @@
         (function () {
             const themeBtn = document.getElementById('themeBtn');
 
-            window.appData = {
-                local: { name: 'Local Storage', folders: [], items: [] },
-                google: { name: 'Google Storage', folders: [], items: [] }
-            };
+            // appData は上のスクリプトで初期化済みなのでここでは初期化しない
+
             let currentFolder = null;
             let pathStack = []; // 最初の要素に 'local' か 'google' を入れることで階層を判定
 
@@ -1373,9 +1382,16 @@
                 localStorage.setItem('shakai_app_data_local', JSON.stringify(appData.local));
 
                 // 現在 Google Storage 階層にいる場合、または一括同期が必要な場合にクラウドへ保存
-                if (pathStack[0] === 'google' && window.syncToCloud) {
-                    window.syncToCloud(appData.google);
+                if (pathStack[0] === 'google') {
+                    if (window.syncToCloud) {
+                        window.syncToCloud(appData.google);
+                    } else {
+                        console.warn("syncToCloud is not available");
+                    }
+                } else {
+                    console.log("Local changes saved, skipping cloud sync (currently in:", pathStack[0], ")");
                 }
+
             }
 
             function updateSelectedCount() {
