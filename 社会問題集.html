@@ -1,0 +1,2129 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+    <title>社会問題集</title>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --text: #333;
+            --panel: #ffffff;
+            --bg-page: #f8f9fa;
+            --toolbar-bg: rgba(240, 240, 240, 0.6);
+            --toolbar-fore: #111;
+            --button-bg: rgba(255, 255, 255, 0.4);
+            --button-fore: #333;
+            --button-active-bg: rgba(0, 120, 212, 0.5);
+            --canvas-bg: #ffffff;
+            --stroke: #333;
+            --toolbar-shadow: rgba(0, 0, 0, 0.1);
+            --toolbar-border: rgba(255, 255, 255, 0.35);
+            --accent: #0a82e6;
+        }
+
+        [data-theme="dark"] {
+            --text: #e6eef8;
+            --panel: #1e2124;
+            --bg-page: #121416;
+            --toolbar-bg: rgba(18, 20, 22, 0.86);
+            --toolbar-fore: #eef3ff;
+            --button-bg: rgba(255, 255, 255, 0.08);
+            --button-fore: #e6eef8;
+            --button-active-bg: rgba(10, 130, 230, 0.25);
+            --canvas-bg: #0b0c0e;
+            --stroke: #e6eef8;
+            --toolbar-shadow: rgba(0, 0, 0, 0.7);
+            --toolbar-border: rgba(255, 255, 255, 0.06);
+            --accent: #0a82e6;
+        }
+
+        * {
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: var(--bg-page);
+            color: var(--text);
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            touch-action: none;
+            -webkit-text-size-adjust: none;
+        }
+
+        .screen-loading {
+            display: flex;
+            background: var(--bg-page);
+            position: fixed;
+            inset: 0;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s ease;
+            z-index: 100;
+        }
+
+        .screen-loading.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            z-index: 10;
+            background: var(--bg-page);
+            transition: 0.2s;
+            overflow: hidden;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        .home-button {
+            width: 85%;
+            max-width: 400px;
+            background: var(--panel);
+            padding: 20px 15px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border: 2px solid transparent;
+            transition: 0.2s;
+            line-height: 1.2;
+        }
+
+        .home-button:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        .home-button i {
+            font-size: 30px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -2px;
+        }
+
+        .toolbar {
+            padding: 12px;
+            display: flex;
+            gap: 16px;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 90;
+            border-radius: 18px;
+            background: var(--toolbar-bg);
+            align-items: center;
+            transition: 0.2s;
+            backdrop-filter: blur(10px) saturate(120%);
+            -webkit-backdrop-filter: blur(10px) saturate(120%);
+            box-shadow: 0 12px 30px var(--toolbar-shadow);
+            border: 1px solid var(--toolbar-border);
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            -webkit-tap-highlight-color: transparent;
+            transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .btn-round {
+            background: var(--button-bg);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            color: var(--button-fore);
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-round:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+        }
+
+        .btn-round:active {
+            transform: scale(0.95);
+        }
+
+        .tool-btn,
+        .explorer-btn {
+            display: none;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12);
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        @media (max-width:420px) {
+            .toolbar {
+                left: 12px;
+                top: 12px;
+                padding: 10px;
+                gap: 12px;
+            }
+
+            .btn-round {
+                width: 48px;
+                height: 48px;
+            }
+        }
+
+        #screen-explorer {
+            align-items: stretch;
+            justify-content: flex-start;
+            padding-top: 110px;
+        }
+
+        .explorer-header {
+            padding: 15px 20px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--toolbar-border);
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .breadcrumb-header {
+            background: var(--toolbar-border);
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 17px;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .breadcrumb-header::-webkit-scrollbar {
+            display: none;
+        }
+
+        .breadcrumb {
+            margin-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .explorer-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 25px 25px 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .explorer-empty-msg {
+            text-align: center;
+            margin-top: 50px;
+            opacity: 0.3;
+            font-size: 14px;
+        }
+
+        .explorer-item {
+            display: flex;
+            align-items: center;
+            background: var(--panel);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .explorer-item.selected {
+            background: rgba(10, 130, 230, 0.12) !important;
+            border-color: rgba(10, 130, 230, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .explorer-item.selected i {
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .item-info {
+            flex: 1;
+        }
+
+        .item-name {
+            font-weight: bold;
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        .item-sub {
+            font-size: 12px;
+            opacity: 0.5;
+            margin-top: 2px;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            font-size: 30px;
+            box-shadow: 0 10px 25px rgba(10, 130, 230, 0.4);
+            z-index: 10;
+        }
+
+        .toolbar.mini {
+            padding: 16px;
+            gap: 20px;
+            transform: scale(0.8);
+            transform-origin: top left;
+        }
+
+        .toolbar.mini button {
+            width: 55px;
+            height: 55px;
+            font-size: 20px;
+        }
+
+        /* コンテキストメニュー */
+        .context-menu {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            width: 220px;
+            background: var(--panel);
+            border: 1px solid var(--toolbar-border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            padding: 8px 0;
+            backdrop-filter: blur(20px);
+        }
+
+        .context-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 18px;
+            cursor: pointer;
+            gap: 12px;
+            font-size: 15px;
+            transition: background 0.2s;
+        }
+
+        .context-item:hover {
+            background: var(--button-active-bg);
+        }
+
+        .context-item i {
+            font-size: 20px;
+        }
+
+        /* ----------------------------------
+           エクスプローラー用新ツールバー 
+           ---------------------------------- */
+        .explorer-toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 10px 20px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--toolbar-border);
+            width: 100%;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .et-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--button-bg);
+            border: 1px solid var(--toolbar-border);
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+            cursor: pointer;
+            transition: 0.2s;
+            height: auto;
+            width: auto;
+            flex-shrink: 0;
+        }
+
+        .et-btn:hover {
+            background: var(--button-active-bg);
+            border-color: var(--accent);
+        }
+
+        .et-btn i {
+            font-size: 16px;
+            color: var(--accent);
+        }
+
+        #trashBtn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none !important;
+            filter: grayscale(1);
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: var(--panel);
+            padding: 30px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        #input-kanji {
+            padding: 10px;
+            width: 100%;
+            height: 200px;
+            font-size: 20px;
+            border: 3px solid var(--accent);
+            border-radius: 16px;
+            background: var(--bg-page);
+            color: var(--text);
+            margin: 10px 0 25px 0;
+            outline: none;
+            box-sizing: border-box;
+            resize: none;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            height: 48px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-submit,
+        .btn-cancel {
+            flex: 1;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            height: auto;
+            width: auto;
+        }
+
+        .btn-submit {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 15px rgba(10, 130, 230, 0.3);
+        }
+
+        .btn-submit:hover {
+            transform: scale(1.02);
+            background: #0070d1;
+        }
+
+        .btn-cancel {
+            background: var(--bg-page);
+            color: var(--text);
+            border: 1px solid var(--toolbar-border);
+        }
+
+        .btn-cancel:hover {
+            background: var(--toolbar-border);
+        }
+
+        /* ミニモード（練習前の選択用） */
+        #screen-explorer.mini {
+            flex-direction: column;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90vw;
+            height: 80vh;
+            border-radius: 24px;
+            box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.4), 0 30px 60px rgba(0, 0, 0, 0.3);
+            z-index: 50;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+            border: 1px solid var(--toolbar-border);
+            padding-top: 0; /* ヘッダーが上に来るように */
+        }
+
+        /* 横長画面（PC/タブレット）では横幅を制限してエクスプローラーっぽく */
+        @media (orientation: landscape) {
+            #screen-explorer.mini {
+                width: 70vw;
+                max-width: 900px;
+                height: 70vh;
+                max-height: 600px;
+            }
+        }
+        
+        /* 縦長画面（スマホ）では縦に長く */
+        @media (orientation: portrait) {
+            #screen-explorer.mini {
+                width: 92vw;
+                height: 75vh;
+            }
+        }
+
+        #screen-explorer.mini h1 {
+            font-size: 1.2rem;
+        }
+
+        #screen-explorer.mini .fab {
+            display: none;
+        }
+
+        .explorer-footer {
+            position: absolute;
+            bottom: -120px;
+            left: 0;
+            width: 100%;
+            padding: 15px 25px;
+            background: var(--panel);
+            border-top: 1px solid var(--toolbar-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: bottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 10;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        /* showクラスがついたときだけ表示される */
+        .explorer-footer.show {
+            bottom: 0 !important;
+        }
+
+        /* ミニモード時は少しスタイルを変えるが、表示ロジックは同じ */
+
+        #screen-explorer.mini .explorer-list {
+            padding-bottom: 90px;
+        }
+
+        .explorer-footer-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .btn-select-practice {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            height: auto;
+            width: auto;
+            box-shadow: 0 4px 15px rgba(10, 130, 230, 0.3);
+            transition: 0.2s;
+        }
+
+        .btn-select-practice:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(10, 130, 230, 0.4);
+        }
+
+        .btn-select-practice:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .btn-select-practice:disabled {
+            background: var(--toolbar-border);
+            /* グレーっぽい色 */
+            color: var(--text);
+            opacity: 0.5;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* 練習画面 */
+        #screen-practice {
+            background: var(--bg-page);
+            justify-content: flex-start;
+            padding-top: 120px;
+        }
+
+        .practice-header {
+            background: var(--panel);
+            padding: 15px 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            color: var(--text);
+            border: 1px solid var(--toolbar-border);
+        }
+
+        .practice-header h2 {
+            padding-right: 20px;
+            margin: 0;
+            font-size: 20px;
+        }
+
+        .practice-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 95%;
+            max-width: 500px;
+            background: var(--panel);
+            padding: 30px 20px;
+            border-radius: 24px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--toolbar-border);
+        }
+
+        .question-number-display {
+            font-size: 42px;
+            color: var(--accent);
+            margin: 0 0 30px 0;
+            font-weight: 900;
+        }
+
+        #answer-input {
+            width: 100%;
+            font-size: 28px;
+            padding: 15px 20px;
+            border: 3px solid var(--toolbar-border);
+            border-radius: 16px;
+            background: var(--bg-page);
+            color: var(--text);
+            text-align: center;
+            outline: none;
+            transition: 0.3s;
+            margin-bottom: 25px;
+            -webkit-user-select: auto;
+            user-select: auto;
+        }
+
+        #answer-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(10, 130, 230, 0.1);
+        }
+
+        .practice-btn {
+            width: 100%;
+            padding: 18px;
+            border-radius: 16px;
+            font-size: 22px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            height: auto;
+        }
+
+        #check-btn {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 6px 20px rgba(10, 130, 230, 0.3);
+        }
+
+        #next-btn {
+            background: #4caf50;
+            color: white;
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.3);
+            display: none;
+        }
+
+        .practice-btn:hover {
+            transform: scale(1.03);
+        }
+
+        .practice-btn:active {
+            transform: scale(0.97);
+        }
+
+        #result-message {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            min-height: 35px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .result-correct {
+            color: #4caf50;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .result-wrong {
+            color: #f44336;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .correct-answer-text {
+            color: var(--text);
+            font-size: 20px;
+            display: block;
+            margin-top: 10px;
+            font-weight: normal;
+        }
+
+        @keyframes popIn {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* ----------------------------------
+           新機能用プレミアムUI 
+           ---------------------------------- */
+
+        .practice-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .timer-display {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--button-bg);
+            padding: 8px 16px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--toolbar-border);
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 12px;
+            background: var(--toolbar-border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 5px;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #0a82e6, #00d2ff);
+            width: 0%;
+            border-radius: 10px;
+            transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            box-shadow: 0 0 10px rgba(10, 130, 230, 0.5);
+        }
+
+        /* 光が走るエフェクト */
+        .progress-bar::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0));
+            transform: translateX(-100%);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+
+        /* リザルト画面 */
+        #screen-result {
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .result-card {
+            background: var(--panel);
+            width: 90%;
+            max-width: 600px;
+            padding: 40px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--toolbar-border);
+            animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin: auto;
+        }
+
+        .result-title {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--accent);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .result-stats {
+            display: flex;
+            justify-content: space-around;
+            background: var(--bg-page);
+            padding: 20px;
+            border-radius: 16px;
+            margin: 25px 0;
+            border: 1px solid var(--toolbar-border);
+        }
+
+        .stat-box {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text);
+        }
+
+        .mistake-section {
+            text-align: left;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .mistake-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #f44336;
+        }
+
+        .mistake-list {
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-right: 5px;
+        }
+
+        .mistake-item {
+            background: var(--bg-page);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .mistake-answer {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .result-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 500px) {
+            .result-buttons {
+                flex-direction: column;
+            }
+            .btn-retry, .btn-finish {
+                width: 100%;
+            }
+        }
+
+        .btn-retry,
+        .btn-finish {
+            flex: 1;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-retry {
+            background: #ff9800;
+            color: white;
+            box-shadow: 0 5px 15px rgba(255, 152, 0, 0.3);
+        }
+
+        .btn-retry:hover {
+            background: #e68900;
+            transform: translateY(-2px);
+        }
+
+        .btn-finish {
+            background: var(--button-bg);
+            color: var(--text);
+            border: 1px solid var(--toolbar-border);
+        }
+
+        .btn-finish:hover {
+            background: var(--toolbar-border);
+            transform: translateY(-2px);
+        }
+
+        /* 紙吹雪エフェクト (Canvasをオーバーレイとして使用) */
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 9999;
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="screen-loading" id="screen-loading"></div>
+
+    <div class="screen active" id="screen-home">
+        <h1>社会問題集ポータル</h1>
+        <div class="home-button" onclick="changeScreen('explorer')"><i class='bx bx-edit-alt'></i>
+            <div>
+                <h3>リスト管理</h3>
+                <p>問題の追加・管理</p>
+            </div>
+        </div>
+        <div class="home-button" onclick="changeScreen('practice')"><i class='bx bx-book-open'></i>
+            <div>
+                <h3>リスト練習</h3>
+                <p>順番に特訓</p>
+            </div>
+        </div>
+        <p style="font-size: 12px; opacity: 0.5; margin-top: 40px;">※このサイトはベータ版です。バグなどが起きる可能性があります。</p>
+        
+        <!-- アカウント連携 UI -->
+        <div id="account-section" style="margin-top: 20px; text-align: center; width: 85%; max-width: 400px; background: var(--panel); padding: 15px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <div id="user-info" style="display: none; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <img id="user-photo" src="" style="width: 32px; height: 32px; border-radius: 50%; display: none;">
+                    <span id="user-name" style="font-size: 14px; font-weight: bold;"></span>
+                </div>
+                <button class="btn-round" onclick="handleLogout()" style="width: 36px; height: 36px; font-size: 16px;"><i class='bx bx-log-out'></i></button>
+            </div>
+            <div id="login-prompt">
+                <button class="btn-round" onclick="handleLogin()" style="width: auto; height: 45px; border-radius: 25px; padding: 0 20px; font-size: 14px; display: inline-flex; gap: 8px;">
+                    <i class='bx bxl-google'></i> Googleでアカウント連携
+                </button>
+                <p style="font-size: 11px; opacity: 0.6; margin-top: 8px;">クラウドにデータを保存し、他端末と同期できます</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="toolbar" id="toolbar">
+        <button class="tool-btn btn-round" id="backBtn" onclick="goHome()"><i class='bx bx-home-alt'></i></button>
+        <button class="explorer-btn btn-round" id="backExplorerBtn" onclick="goBackExplorer()"><i
+                class='bx bx-arrow-back'></i></button>
+        <button class="explorer-btn btn-round" id="trashBtn" onclick="deleteSelected()" disabled><i class='bx bx-trash'></i></button>
+        <button class="btn-round" id="themeBtn"><i class='bx bx-moon'></i></button>
+    </div>
+
+    <div class="screen" id="screen-practice">
+        <div class="practice-header">
+            <div class="practice-header-top">
+                <h2 id="practice-progress">第 1 問 / 全 10 問</h2>
+                <div class="timer-display" id="practice-timer"><i class='bx bx-time'></i> 00:00</div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="practice-progress-bar"></div>
+            </div>
+        </div>
+
+        <div class="practice-content">
+            <h1 class="question-number-display" id="question-number-display">第 1 問</h1>
+
+            <input type="text" id="answer-input" placeholder="答えを入力" autocomplete="off" />
+
+            <div id="result-message"></div>
+
+            <button class="practice-btn" id="check-btn" onclick="checkAnswer()">回答する</button>
+            <button class="practice-btn" id="next-btn" onclick="nextQuestion()">次へ</button>
+        </div>
+    </div>
+
+    <!-- リザルト画面 -->
+    <div class="screen" id="screen-result">
+        <div class="result-card">
+            <h1 class="result-title"><i class='bx bxs-trophy' style="color: #ffca28;"></i> 練習完了！</h1>
+
+            <div class="result-stats">
+                <div class="stat-box">
+                    <span class="stat-label">タイム</span>
+                    <span class="stat-value" id="result-time">00:00</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-label">正答率</span>
+                    <span class="stat-value" id="result-rate">100%</span>
+                </div>
+            </div>
+
+            <div class="mistake-section" id="mistake-section" style="display: none;">
+                <div class="mistake-title"><i class='bx bx-error-circle'></i> 間違えた問題</div>
+                <div class="mistake-list" id="mistake-list">
+                    <!-- 間違えた問題がここに追加される -->
+                </div>
+            </div>
+
+            <div class="result-buttons">
+                <button class="btn-retry" id="btn-retry-mistakes" onclick="retryMistakes()" style="display: none;">
+                    <i class='bx bx-refresh'></i> 復習する
+                </button>
+                <button class="btn-finish" onclick="goHome()">
+                    <i class='bx bx-check'></i> 完了
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="screen" id="screen-explorer">
+        <div class="explorer-header">
+            <div class="breadcrumb-header">
+                <div class="breadcrumb">
+                    <span id="current-folder-name">local storage</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="explorer-toolbar" id="explorer-toolbar" style="display:none;">
+            <button class="et-btn" onclick="openFolderModal()"><i class='bx bxs-folder-plus'></i> フォルダ作成</button>
+            <button class="et-btn" onclick="addFile()"><i class='bx bxs-file-plus'></i> 答え追加</button>
+            <button class="et-btn" onclick="importJson()"><i class='bx bx-import'></i> インポート</button>
+            <button class="et-btn" onclick="exportJson()"><i class='bx bx-export'></i> エクスポート</button>
+        </div>
+
+        <div class="explorer-list" id="explorer-list"></div>
+
+        <div class="explorer-footer" id="explorer-footer">
+            <div class="explorer-footer-text" id="selected-count">選択中: 0問</div>
+            <button class="btn-select-practice" id="btn-select-practice" onclick="startPracticeFromMenu()"
+                disabled>選択</button>
+        </div>
+    </div>
+
+    <div id="context-menu"
+        style="display:none; position:fixed; z-index:10; width:225px; background:var(--panel); border:1px solid var(--toolbar-border); border-radius:10px; box-shadow:0 10px 25px rgba(0,0,0,0.3); padding:5px 0;">
+        <div class="context-item" id="menu-new-folder" onclick="addFolder()"><i class='bx bxs-folder-plus'
+                style="color: #ffca28;"></i> <span>新しいフォルダ</span></div>
+        <div class="context-item" id="menu-new-file" onclick="addFile()"><i
+                class='bx bxs-file-plus'></i><span>新しい答え</span></div>
+        <div class="context-item" id="menu-import-json" onclick="importJson()"><i class='bx bx-import'
+                style="color: #4caf50;"></i><span>JSONを読み込む</span></div>
+        <div class="context-item" id="menu-export-json" onclick="exportJson()"><i class='bx bx-export'
+                style="color: #0a82e6;"></i><span>JSONを保存する</span></div>
+        <div class="context-item" id="menu-practice" onclick="startPracticeFromMenu()"><i class='bx bx-edit-alt'></i>
+            <span>この問題集を練習する</span>
+        </div>
+        <div class="context-item" id="menu-delete" onclick="deleteSelected()" style="color:#ff4757;"><i
+                class='bx bx-trash'></i> <span>消去する</span></div>
+    </div>
+
+    <input type="file" id="json-file-input" accept=".json" style="display: none;">
+
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h3>答えを登録</h3>
+            <textarea id="input-kanji" placeholder="改行で複数登録できます"></textarea>
+            <div class="modal-buttons">
+                <button onclick="closeModal()" class="btn-cancel">キャンセル</button>
+                <button onclick="submitFile()" class="btn-submit">登録</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- フォルダ作成用モーダル -->
+    <div id="folder-modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <h3>新しいフォルダ</h3>
+            <input type="text" id="input-folder-name" placeholder="フォルダ名を入力" 
+                   style="width:100%; padding:15px; border-radius:12px; border:2px solid var(--accent); background:var(--bg-page); color:var(--text); margin:20px 0; font-size:18px; outline:none;" />
+            <div class="modal-buttons">
+                <button onclick="closeFolderModal()" class="btn-cancel">キャンセル</button>
+                <button onclick="submitFolder()" class="btn-submit">作成</button>
+            </div>
+        </div>
+    </div>
+
+    </div>
+
+    <!-- セキュリティ同意モーダル -->
+    <div id="consent-modal-overlay" class="modal-overlay">
+        <div class="modal-content" style="max-width: 450px;">
+            <i class='bx bxs-error-circle' style="font-size: 60px; color: #ff9800; margin-bottom: 20px;"></i>
+            <h2 style="margin-bottom: 15px;">ご利用前の確認</h2>
+            <p style="text-align: left; line-height: 1.6; font-size: 15px; margin-bottom: 25px;">
+                本アプリはローカルストレージを使用します。GitHub Pages等の公開環境で利用する場合、ブラウザの仕様や設定により<strong>アカウントのデータが漏洩または消去される可能性</strong>があります。<br><br>
+                重要なデータの取り扱いには十分ご注意ください。
+            </p>
+            <div style="margin-bottom: 25px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer;">
+                <input type="checkbox" id="consent-checkbox" style="width: 18px; height: 18px; cursor: pointer;" />
+                <label for="consent-checkbox" style="font-size: 14px; cursor: pointer;">次回から表示しない</label>
+            </div>
+            <button onclick="acceptConsent()" class="btn-submit" style="width: 100%; height: 55px; font-size: 18px;">同意して始める</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWhxfi3efSXXN3LhzjqYAD8r_WT-YWqG0",
+            authDomain: "test-d71db.firebaseapp.com",
+            projectId: "test-d71db",
+            storageBucket: "test-d71db.firebasestorage.app",
+            messagingSenderId: "617785886761",
+            appId: "1:617785886761:web:ae0b8af4c64759ee387438",
+            measurementId: "G-BXGLFRJ3JF"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        let currentUser = null;
+
+        // ログイン処理
+        window.handleLogin = async function() {
+            try {
+                const result = await signInWithPopup(auth, provider);
+                console.log("Logged in:", result.user.displayName);
+            } catch (error) {
+                console.error("Login failed:", error);
+                alert("ログインに失敗しました。");
+            }
+        };
+
+        // ログアウト処理
+        window.handleLogout = async function() {
+            if (confirm("ログアウトしますか？")) {
+                try {
+                    await signOut(auth);
+                } catch (error) {
+                    console.error("Logout failed:", error);
+                }
+            }
+        };
+
+        // クラウド保存
+        window.syncToCloud = async function(data) {
+            if (!currentUser) return;
+            try {
+                await setDoc(doc(db, "users", currentUser.uid), {
+                    appData: JSON.stringify(data),
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+                console.log("Synced to Cloud");
+            } catch (error) {
+                console.error("Cloud sync failed:", error);
+            }
+        };
+
+        // クラウドから取得
+        async function fetchFromCloud(uid) {
+            try {
+                const docSnap = await getDoc(doc(db, "users", uid));
+                if (docSnap.exists()) {
+                    const cloudData = docSnap.data().appData;
+                    if (cloudData) {
+                        return JSON.parse(cloudData);
+                    }
+                }
+            } catch (error) {
+                console.error("Fetch from cloud failed:", error);
+            }
+            return null;
+        }
+
+        // 状態監視
+        onAuthStateChanged(auth, async (user) => {
+            const userInfo = document.getElementById('user-info');
+            const loginPrompt = document.getElementById('login-prompt');
+            const userName = document.getElementById('user-name');
+            const userPhoto = document.getElementById('user-photo');
+
+            if (user) {
+                currentUser = user;
+                userInfo.style.display = 'flex';
+                loginPrompt.style.display = 'none';
+                userName.innerText = user.displayName;
+                if (user.photoURL) {
+                    userPhoto.src = user.photoURL;
+                    userPhoto.style.display = 'block';
+                }
+
+                // ログイン時、クラウドにデータがあれば復元するか確認（初回のみなど検討の余地ありだが一旦同期）
+                const cloudData = await fetchFromCloud(user.uid);
+                if (cloudData) {
+                    // LocalStorageより新しいかなどの判定は簡易化し、クラウド優先
+                    window.appData = cloudData;
+                    localStorage.setItem('shakai_app_data', JSON.stringify(window.appData));
+                    if (typeof window.renderExplorer === 'function') window.renderExplorer();
+                }
+            } else {
+                currentUser = null;
+                userInfo.style.display = 'none';
+                loginPrompt.style.display = 'block';
+            }
+        });
+    </script>
+    <script>
+        (function () {
+            const themeBtn = document.getElementById('themeBtn');
+
+            window.appData = { folders: [], items: [] };
+            let currentFolder = null;
+            let pathStack = [];
+
+            let currentPracticeList = [];
+            let currentQuestionIndex = 0;
+            let selectedItemForPractice = null;
+
+            // アップグレード用変数
+            let startTime = 0;
+            let timerInterval = null;
+            let mistakesThisRound = [];
+            let confettiParticles = [];
+            let confettiAnimationId = null;
+
+            const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            function applyTheme(isDark) {
+                if (isDark) { document.documentElement.setAttribute('data-theme', 'dark'); themeBtn.innerHTML = "<i class='bx bx-sun'></i>"; }
+                else { document.documentElement.removeAttribute('data-theme'); themeBtn.innerHTML = "<i class='bx bx-moon'></i>"; }
+            }
+            applyTheme(darkQuery.matches);
+            darkQuery.addEventListener('change', e => applyTheme(e.matches));
+
+            window.changeScreen = async function (target) {
+                const screen_loading = document.getElementById('screen-loading');
+                const explorer = document.getElementById('screen-explorer');
+                const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+                screen_loading.classList.add('active');
+
+                await loadExternalData();
+                await sleep(250);
+
+                if (target === 'practice') {
+                    document.getElementById('screen-home').classList.remove('active');
+                    explorer.classList.add('active');
+                    document.getElementById('backBtn').style.display = 'flex';
+                    document.querySelectorAll('.tool-btn').forEach(b => b.style.display = 'flex');
+
+                    explorer.classList.add('mini');
+                    updateSelectedCount();
+                } else if (target === 'explorer') {
+                    document.getElementById('screen-home').classList.remove('active');
+                    explorer.classList.add('active');
+                    document.getElementById('backBtn').style.display = 'flex';
+
+                    document.getElementById('toolbar').classList.add('mini');
+                    document.getElementById('explorer-toolbar').style.display = 'flex';
+                    document.querySelectorAll('.explorer-btn').forEach(b => b.style.display = 'flex');
+                    explorer.classList.remove('mini');
+                }
+
+                updateSelectedCount(); // 画面遷移時にも状態を反映
+                screen_loading.classList.remove('active');
+            }
+
+            window.goHome = async function () {
+                const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+                document.getElementById('screen-loading').classList.add('active');
+                await sleep(250);
+                document.getElementById('screen-loading').classList.remove('active');
+
+                document.querySelectorAll('.tool-btn').forEach(b => b.style.display = 'none');
+                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+                document.querySelectorAll('.explorer-btn').forEach(b => b.style.display = 'none');
+
+                document.getElementById('screen-home').classList.add('active');
+                document.getElementById('toolbar').classList.remove('mini');
+                document.getElementById('screen-explorer').classList.remove('mini');
+                document.getElementById('explorer-toolbar').style.display = 'none';
+
+                currentFolder = null;
+                pathStack = [];
+                selectedItemForPractice = null;
+
+                if (timerInterval) clearInterval(timerInterval);
+                stopConfetti();
+                checkConsent(); // ホームに戻った時に同意を再確認（未確認の場合）
+            }
+
+            function stopConfetti() {
+                if (confettiAnimationId) {
+                    cancelAnimationFrame(confettiAnimationId);
+                    confettiAnimationId = null;
+                }
+                confettiParticles = [];
+                const canvas = document.getElementById('confetti-canvas');
+                if (canvas) {
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+
+            themeBtn.addEventListener('click', () => applyTheme(document.documentElement.getAttribute('data-theme') !== 'dark'));
+
+            async function loadExternalData() {
+                const saved = localStorage.getItem('shakai_app_data');
+                if (saved) {
+                    appData = JSON.parse(saved);
+                } else {
+                    appData = { folders: [], items: [], importedFiles: [] };
+                }
+
+                if (!appData.importedFiles) appData.importedFiles = [];
+                
+                // ※ Firebase連携を行うため、ローカルのanswers.json自動読み込みは廃止
+
+                renderExplorer();
+            }
+
+            window.acceptConsent = function() {
+                const checkbox = document.getElementById('consent-checkbox');
+                if (checkbox.checked) {
+                    localStorage.setItem('shakai_consent_accepted', 'true');
+                }
+                document.getElementById('consent-modal-overlay').style.display = 'none';
+            };
+
+            function checkConsent() {
+                const accepted = localStorage.getItem('shakai_consent_accepted');
+                if (accepted === 'true') {
+                    document.getElementById('consent-modal-overlay').style.display = 'none';
+                } else {
+                    document.getElementById('consent-modal-overlay').style.display = 'flex';
+                }
+            }
+
+            window.saveData = function() {
+                localStorage.setItem('shakai_app_data', JSON.stringify(appData));
+                
+                // ログイン中ならクラウドにも保存
+                if (window.syncToCloud) {
+                    window.syncToCloud(appData);
+                }
+            }
+
+            function updateSelectedCount() {
+                let count = 0;
+                if (selectedItemForPractice) {
+                    if (selectedItemForPractice.items) {
+                        count = selectedItemForPractice.items.length;
+                    } else {
+                        count = 1; // 個別のファイルを選択した場合
+                    }
+                } else {
+                    // 何も選択していない場合は現在のフォルダ（またはルート）の直下の全ての問題数を出す
+                    const target = currentFolder ? currentFolder : appData;
+                    if (target.items) count += target.items.length;
+                }
+                document.getElementById('selected-count').innerText = `選択中: ${count}問`;
+
+                const selectBtn = document.getElementById('btn-select-practice');
+                const footer = document.getElementById('explorer-footer');
+
+                // アイテムが選択されている場合のみフッターを下から出す
+                if (selectedItemForPractice) {
+                    footer.classList.add('show');
+                } else {
+                    footer.classList.remove('show');
+                }
+
+                // 問題数が0なら選択ボタンを押せないようにする
+                if (count === 0) {
+                    selectBtn.disabled = true;
+                    selectBtn.innerText = "問題なし";
+                } else {
+                    selectBtn.disabled = false;
+                    selectBtn.innerText = "選択して練習";
+                }
+
+                // ゴミ箱ボタンの制御
+                const trashBtn = document.getElementById('trashBtn');
+                if (trashBtn) {
+                    trashBtn.disabled = !selectedItemForPractice;
+                }
+            }
+
+            function renderExplorer() {
+                const listContainer = document.getElementById('explorer-list');
+                listContainer.innerHTML = '';
+                const target = currentFolder ? currentFolder : appData;
+
+                function updateBreadcrumb() {
+                    const breadcrumbContainer = document.querySelector('.breadcrumb');
+                    if (!breadcrumbContainer) return;
+                    breadcrumbContainer.innerHTML = '';
+
+                    const homeSpan = document.createElement('span');
+                    homeSpan.innerText = 'local storage';
+                    homeSpan.style.cursor = 'pointer';
+                    homeSpan.onclick = () => { currentFolder = null; pathStack = []; renderExplorer(); };
+                    breadcrumbContainer.appendChild(homeSpan);
+
+                    pathStack.forEach((folder, index) => {
+                        if (!folder) return;
+                        const icon = document.createElement('i');
+                        icon.className = 'bx bx-chevron-right';
+                        breadcrumbContainer.appendChild(icon);
+                        const span = document.createElement('span');
+                        span.innerText = folder.name;
+                        span.style.cursor = 'pointer';
+                        span.onclick = () => { currentFolder = folder; pathStack = pathStack.slice(0, index); renderExplorer(); };
+                        breadcrumbContainer.appendChild(span);
+                    });
+
+                    if (currentFolder) {
+                        const icon = document.createElement('i');
+                        icon.className = 'bx bx-chevron-right';
+                        breadcrumbContainer.appendChild(icon);
+                        const currentSpan = document.createElement('span');
+                        currentSpan.innerText = currentFolder.name;
+                        currentSpan.style.fontWeight = 'bold';
+                        breadcrumbContainer.appendChild(currentSpan);
+                    }
+                }
+
+                updateBreadcrumb();
+
+                // フォルダもファイルもない場合にメッセージを表示
+                if ((!target.folders || target.folders.length === 0) && (!target.items || target.items.length === 0)) {
+                    const emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'explorer-empty-msg';
+                    emptyMsg.innerText = 'フォルダやファイルがありません';
+                    listContainer.appendChild(emptyMsg);
+                }
+
+                if (target.folders) {
+                    target.folders.forEach(subFolder => {
+                        const item = document.createElement('div');
+                        item.className = 'explorer-item folder';
+                        item.innerHTML = `
+                            <i class='bx bxs-folder' style="color:#ffca28; font-size:32px; margin-right:15px;"></i>
+                            <div class="item-info">
+                                <div class="item-name">${subFolder.name}</div>
+                                <div class="item-sub">フォルダ: ${subFolder.folders?.length || 0} / 問題: ${subFolder.items?.length || 0}</div>
+                            </div>
+                            <i class='bx bx-chevron-right'></i>
+                        `;
+                        let folderTapCount = 0;
+                        let folderTapTimer = null;
+                        item.onclick = (e) => {
+                            e.stopPropagation();
+                            folderTapCount++;
+                            document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
+                            item.classList.add('selected');
+                            selectedItemForPractice = subFolder;
+                            updateSelectedCount();
+
+                            if (folderTapCount === 1) {
+                                folderTapTimer = setTimeout(() => { folderTapCount = 0; }, 250);
+                            } else if (folderTapCount === 2) {
+                                clearTimeout(folderTapTimer);
+                                folderTapCount = 0;
+                                selectedItemForPractice = null;
+                                pathStack.push(currentFolder);
+                                currentFolder = subFolder;
+                                renderExplorer();
+                            }
+                        };
+                        item.oncontextmenu = (e) => {
+                            const isAlreadySelected = item.classList.contains('selected');
+                            if (!isAlreadySelected) {
+                                e.preventDefault(); e.stopPropagation();
+                                document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
+                                rightClickedItem = subFolder; rightClickedType = 'folder';
+                                document.getElementById('menu-new-folder').style.display = 'flex';
+                                document.getElementById('menu-new-file').style.display = 'flex';
+                                document.getElementById('menu-import-json').style.display = 'flex';
+                                document.getElementById('menu-export-json').style.display = 'flex';
+                                document.getElementById('menu-practice').style.display = 'none';
+                                document.getElementById('menu-delete').style.display = 'none';
+                                showMenu(e.clientX, e.clientY);
+                            } else {
+                                e.preventDefault(); e.stopPropagation();
+                                rightClickedItem = subFolder; rightClickedType = 'folder';
+                                document.getElementById('menu-new-folder').style.display = 'none';
+                                document.getElementById('menu-new-file').style.display = 'none';
+                                document.getElementById('menu-import-json').style.display = 'none';
+                                document.getElementById('menu-export-json').style.display = 'flex';
+                                document.getElementById('menu-practice').style.display = 'flex';
+                                document.getElementById('menu-delete').style.display = 'flex';
+                                showMenu(e.clientX, e.clientY);
+                            }
+                        };
+                        listContainer.appendChild(item);
+                    });
+                }
+
+                if (target.items) {
+                    target.items.forEach(kanjiItem => {
+                        const item = document.createElement('div');
+                        item.className = 'explorer-item file';
+                        item.innerHTML = `
+                            <i class='bx bxs-file' style="color:#0a82e6; font-size:32px; margin-right:15px;"></i>
+                            <div class="item-info">
+                                <div class="item-name">答え：${kanjiItem.kanji}</div>
+                            </div>
+                        `;
+                        item.onclick = (e) => {
+                            e.stopPropagation();
+                            document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
+                            item.classList.add('selected');
+                            selectedItemForPractice = kanjiItem;
+                            updateSelectedCount();
+                        };
+                        item.oncontextmenu = (e) => {
+                            const isAlreadySelected = item.classList.contains('selected');
+                            if (!isAlreadySelected) {
+                                e.preventDefault(); e.stopPropagation();
+                                document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
+                                rightClickedItem = null; rightClickedType = null;
+                                document.getElementById('menu-new-folder').style.display = 'flex';
+                                document.getElementById('menu-new-file').style.display = 'flex';
+                                document.getElementById('menu-import-json').style.display = 'flex';
+                                document.getElementById('menu-export-json').style.display = 'flex';
+                                document.getElementById('menu-practice').style.display = 'none';
+                                document.getElementById('menu-delete').style.display = 'none';
+                                showMenu(e.clientX, e.clientY);
+                            } else {
+                                e.preventDefault(); e.stopPropagation();
+                                rightClickedItem = kanjiItem; rightClickedType = 'file';
+                                document.getElementById('menu-new-folder').style.display = 'none';
+                                document.getElementById('menu-new-file').style.display = 'none';
+                                document.getElementById('menu-import-json').style.display = 'none';
+                                document.getElementById('menu-export-json').style.display = 'none';
+                                document.getElementById('menu-practice').style.display = 'none';
+                                document.getElementById('menu-delete').style.display = 'flex';
+                                showMenu(e.clientX, e.clientY);
+                            }
+                        };
+                        listContainer.appendChild(item);
+                    });
+                }
+                updateSelectedCount();
+            }
+
+            document.getElementById('explorer-list').onclick = (e) => {
+                document.querySelectorAll('.explorer-item').forEach(el => el.classList.remove('selected'));
+                selectedItemForPractice = null;
+                updateSelectedCount();
+            };
+
+            document.getElementById('explorer-list').oncontextmenu = (e) => {
+                e.preventDefault();
+                rightClickedItem = null;
+                document.getElementById('menu-new-folder').style.display = 'flex';
+                document.getElementById('menu-new-file').style.display = 'flex';
+                document.getElementById('menu-import-json').style.display = 'flex';
+                document.getElementById('menu-export-json').style.display = 'flex';
+                document.getElementById('menu-practice').style.display = 'none';
+                document.getElementById('menu-delete').style.display = 'none';
+                showMenu(e.clientX, e.clientY);
+            };
+
+            window.goBackExplorer = function () {
+                if (pathStack.length > 0) {
+                    currentFolder = pathStack.pop();
+                    selectedItemForPractice = null;
+                    renderExplorer();
+                } else {
+                    goHome();
+                }
+            };
+
+            const contextMenu = document.getElementById('context-menu');
+            let rightClickedItem = null;
+            let rightClickedType = null;
+
+            document.addEventListener('click', () => { contextMenu.style.display = 'none'; });
+
+            function showMenu(x, y) {
+                const menu = document.getElementById('context-menu');
+                menu.style.display = 'none';
+                setTimeout(() => {
+                    menu.style.left = `${x}px`; menu.style.top = `${y}px`; menu.style.display = 'block';
+                }, 10);
+            }
+
+            window.openFolderModal = function () {
+                document.getElementById('folder-modal-overlay').style.display = 'flex';
+                const input = document.getElementById('input-folder-name');
+                input.value = '';
+                input.focus();
+                
+                // エンターキーで作成できるようにイベント追加
+                input.onkeydown = (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        submitFolder();
+                    }
+                };
+            };
+
+            window.closeFolderModal = function () {
+                document.getElementById('folder-modal-overlay').style.display = 'none';
+            };
+
+            window.submitFolder = function () {
+                const name = document.getElementById('input-folder-name').value.trim();
+                if (!name) {
+                    alert("フォルダ名を入力してください");
+                    return;
+                }
+                const target = currentFolder ? currentFolder : appData;
+                if (!target.folders) target.folders = [];
+                target.folders.push({
+                    id: "f_" + Date.now(),
+                    name: name,
+                    folders: [],
+                    items: []
+                });
+                renderExplorer();
+                saveData();
+                closeFolderModal();
+            };
+
+            // 旧Prompt版は廃止（互換性のため関数名は残すが中身をモーダル呼び出しに）
+            window.addFolder = function () {
+                openFolderModal();
+            };
+
+            window.addFile = function () {
+                document.getElementById('modal-overlay').style.display = 'flex';
+                const input = document.getElementById('input-kanji');
+                input.value = ''; input.focus();
+            };
+
+            window.deleteSelected = function () {
+                let targetItem = rightClickedItem;
+                let targetType = rightClickedType;
+
+                // ツールバーのゴミ箱ボタンから呼ばれた場合（右クリック経由ではない）
+                if (!targetItem) {
+                    if (!selectedItemForPractice) return;
+                    targetItem = selectedItemForPractice;
+                    targetType = targetItem.items !== undefined ? 'folder' : 'file';
+                }
+
+                const nameName = targetType === 'folder' ? targetItem.name : targetItem.kanji;
+                if (!confirm(`「${nameName}」を削除してもよろしいですか？`)) return;
+
+                const target = currentFolder ? currentFolder : appData;
+                if (targetType === 'folder') {
+                    target.folders = target.folders.filter(f => f !== targetItem);
+                } else {
+                    target.items = target.items.filter(i => i !== targetItem);
+                }
+
+                // 削除したアイテムが現在選択中のアイテムなら選択を解除
+                if (selectedItemForPractice === targetItem) {
+                    selectedItemForPractice = null;
+                }
+                rightClickedItem = null;
+                rightClickedType = null;
+
+                renderExplorer(); saveData();
+                document.getElementById('context-menu').style.display = 'none';
+            };
+
+            // FABは廃止されたが、右クリックメニューなどは共通で使える
+            window.addmenu = function (e) {
+                // コンテキストメニューを特定の場所に出す仕組み（旧FAB互換用）
+                if (e) e.stopPropagation();
+                // 実際にはツールバーボタン経由で個別の関数が呼ばれるため、ここは今は空でも良い
+            };
+
+            window.importJson = function () {
+                document.getElementById('json-file-input').click();
+                document.getElementById('context-menu').style.display = 'none';
+            };
+
+            document.getElementById('json-file-input').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const jsonData = JSON.parse(e.target.result);
+
+                        let folderName = file.name.replace('.json', '');
+                        if (jsonData.title) folderName = jsonData.title;
+
+                        let items = [];
+                        if (jsonData.answers && Array.isArray(jsonData.answers)) {
+                            items = jsonData.answers.map(ans => ({ kanji: ans, yomi: '' }));
+                        } else if (jsonData.items && Array.isArray(jsonData.items)) {
+                            items = jsonData.items;
+                        } else {
+                            alert("対応していないJSONフォーマットです");
+                            return;
+                        }
+
+                        let newFolder = {
+                            id: "f_" + Date.now(),
+                            name: folderName,
+                            folders: [],
+                            items: items
+                        };
+
+                        const target = currentFolder ? currentFolder : appData;
+                        if (!target.folders) target.folders = [];
+                        target.folders.push(newFolder);
+
+                        saveData();
+                        renderExplorer();
+                        alert(`「${folderName}」を読み込みました！`);
+                    } catch (error) {
+                        alert("JSONの読み込みに失敗しました: " + error.message);
+                    }
+                };
+                reader.readAsText(file);
+                // 入力内容をリセットして同じファイルを何度でも読み込めるようにする
+                this.value = '';
+            });
+
+            window.exportJson = function () {
+                let targetItem = rightClickedItem;
+
+                // フォルダ内で右クリックせずに選択している場合はそのフォルダ
+                if (!targetItem) {
+                    targetItem = currentFolder ? currentFolder : appData;
+                }
+
+                if (!targetItem.items && !targetItem.folders) {
+                    alert("出力できるデータがありません");
+                    return;
+                }
+
+                let exportData = {
+                    title: targetItem.name || "エクスポートデータ",
+                    items: targetItem.items || []
+                };
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportData, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", (targetItem.name || "shakai_data") + ".json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+
+                document.getElementById('context-menu').style.display = 'none';
+            };
+
+            window.submitFile = function () {
+                const fullText = document.getElementById('input-kanji').value;
+                const kanjiList = fullText.split(/\r?\n/).map(k => k.trim()).filter(k => k !== "");
+                if (kanjiList.length === 0) { alert("答えを入力してください"); return; }
+
+                const target = currentFolder ? currentFolder : appData;
+                if (!target.items) target.items = [];
+
+                kanjiList.forEach(kanji => { target.items.push({ kanji: kanji, yomi: '' }); });
+                renderExplorer(); saveData(); closeModal();
+            };
+
+            window.closeModal = function () { document.getElementById('modal-overlay').style.display = 'none'; };
+
+            window.startPracticeFromMenu = function () {
+                let practiceList = [];
+                if (selectedItemForPractice) {
+                    if (selectedItemForPractice.items) {
+                        practiceList = selectedItemForPractice.items;
+                    } else {
+                        practiceList = [selectedItemForPractice];
+                    }
+                } else {
+                    const target = currentFolder ? currentFolder : appData;
+                    if (target.items && target.items.length > 0) {
+                        practiceList = target.items;
+                    }
+                }
+
+                if (practiceList.length === 0) {
+                    alert('中に問題がありません。');
+                    return;
+                }
+
+                // 復習時の表示用に「元の問題番号（originalIndex）」を持たせておく
+                currentPracticeList = practiceList.map((item, index) => {
+                    return { ...item, originalIndex: index + 1 };
+                });
+
+                currentQuestionIndex = 0;
+                mistakesThisRound = [];
+
+                startTimer();
+
+                document.getElementById('screen-explorer').classList.remove('active');
+                document.getElementById('screen-practice').classList.add('active');
+                document.getElementById('toolbar').classList.remove('mini');
+                document.getElementById('backBtn').style.display = 'flex';
+                document.querySelectorAll('.explorer-btn').forEach(b => b.style.display = 'none');
+
+                renderQuestion();
+            };
+
+            function startTimer() {
+                if (timerInterval) clearInterval(timerInterval);
+                startTime = Date.now();
+                updateTimerDisplay();
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+            }
+
+            function updateTimerDisplay() {
+                const now = Date.now();
+                const diff = Math.floor((now - startTime) / 1000);
+                const mins = String(Math.floor(diff / 60)).padStart(2, '0');
+                const secs = String(diff % 60).padStart(2, '0');
+                document.getElementById('practice-timer').innerHTML = `<i class='bx bx-time'></i> ${mins}:${secs}`;
+            }
+
+            function renderQuestion() {
+                const total = currentPracticeList.length;
+                const current = currentQuestionIndex + 1;
+                const currentItem = currentPracticeList[currentQuestionIndex];
+
+                // 元の問題番号があればそれを使う（復習時など用）
+                const displayIndex = currentItem.originalIndex || current;
+
+                document.getElementById('practice-progress').innerText = `第 ${current} 問 / 全 ${total} 問`;
+                document.getElementById('question-number-display').innerText = `第 ${displayIndex} 問`;
+
+                // プログレスバーの更新 (0% から 100% まで)
+                const progressPercent = ((current - 1) / total) * 100;
+                document.getElementById('practice-progress-bar').style.width = `${progressPercent}%`;
+
+                let input = document.getElementById('answer-input');
+                input.value = '';
+                input.disabled = false;
+
+                document.getElementById('result-message').innerHTML = '';
+                document.getElementById('check-btn').style.display = 'block';
+                document.getElementById('next-btn').style.display = 'none';
+
+                // モバイルなどでのUIのガチャつきを防ぐために少し遅延してフォーカス
+                setTimeout(() => input.focus(), 100);
+            }
+
+            window.checkAnswer = function () {
+                let inputEl = document.getElementById('answer-input');
+                let input = inputEl.value.trim();
+                if (!input) {
+                    alert("答えを入力してください");
+                    inputEl.focus();
+                    return;
+                }
+
+                let currentItem = currentPracticeList[currentQuestionIndex];
+                let correctAnswer = currentItem.kanji;
+
+                let resultMsg = document.getElementById('result-message');
+
+                if (input === correctAnswer) {
+                    // 【ユーザー要望】正解時は文字を出さず、花びら（紙吹雪）だけ出して自動で次の問題へ
+                    fireConfetti();
+                    
+                    // 入力欄をクリアして無効化（連打防止）
+                    inputEl.value = '';
+                    inputEl.disabled = true;
+                    document.getElementById('check-btn').style.display = 'none';
+
+                    // プログレスバーの更新
+                    const total = currentPracticeList.length;
+                    const current = currentQuestionIndex + 1;
+                    const progressPercent = (current / total) * 100;
+                    document.getElementById('practice-progress-bar').style.width = `${progressPercent}%`;
+
+                    // 0.85秒（三三七拍子的リズム）待ってから自動で次の問題へ
+                    setTimeout(() => {
+                        // 画面が切り替わっていない（練習中）であることを確認して次へ
+                        if (document.getElementById('screen-practice').classList.contains('active')) {
+                            nextQuestion();
+                        }
+                    }, 850);
+                } else {
+                    // 間違った場合は今まで通り（正解を表示して「次へ」を待つ）
+                    resultMsg.innerHTML = `<span class="result-wrong">不正解...<br><span class="correct-answer-text">正解は「<b>${correctAnswer}</b>」です</span></span><br><span style="font-size:16px; color:var(--text); opacity:0.8;">※次へ進んでください</span>`;
+                    
+                    document.getElementById('check-btn').style.display = 'none';
+                    document.getElementById('next-btn').style.display = 'block';
+                    document.getElementById('next-btn').focus();
+
+                    // ミスリストに追加 (重複防止)
+                    if (!mistakesThisRound.includes(currentItem)) {
+                        mistakesThisRound.push(currentItem);
+                    }
+                }
+            };
+
+            window.nextQuestion = function () {
+                currentQuestionIndex++;
+                if (currentQuestionIndex >= currentPracticeList.length) {
+                    // inputからフォーカスを外してキーボードを閉じる
+                    document.getElementById('answer-input').blur();
+                    showResultScreen();
+                } else {
+                    renderQuestion();
+                    // 次の画面になったら入力欄にフォーカス
+                    setTimeout(() => document.getElementById('answer-input').focus(), 10);
+                }
+            };
+
+            // ------------------------------------
+            // リザルト画面 & 紙吹雪ロジック
+            // ------------------------------------
+
+            function showResultScreen() {
+                if (timerInterval) clearInterval(timerInterval);
+
+                document.getElementById('screen-practice').classList.remove('active');
+                document.getElementById('screen-result').classList.add('active');
+                document.getElementById('toolbar').classList.add('mini');
+                document.getElementById('backBtn').style.display = 'flex';
+
+                // タイムの計算と表示
+                const now = Date.now();
+                const diff = Math.floor((now - startTime) / 1000);
+                const mins = String(Math.floor(diff / 60)).padStart(2, '0');
+                const secs = String(diff % 60).padStart(2, '0');
+                document.getElementById('result-time').innerText = `${mins}:${secs}`;
+
+                // 正答率の計算
+                const total = currentPracticeList.length;
+                const mistakes = mistakesThisRound.length;
+                const correctRate = Math.round(((total - mistakes) / total) * 100);
+                document.getElementById('result-rate').innerText = `${correctRate}%`;
+
+                // 間違えた問題リストの表示
+                const mistakeSection = document.getElementById('mistake-section');
+                const mistakeListEl = document.getElementById('mistake-list');
+                const btnRetry = document.getElementById('btn-retry-mistakes');
+
+                if (mistakes > 0) {
+                    mistakeListEl.innerHTML = '';
+                    mistakesThisRound.forEach((item, index) => {
+                        const mistEl = document.createElement('div');
+                        mistEl.className = 'mistake-item';
+                        // 元の問題番号を表示する
+                        const num = item.originalIndex || (currentPracticeList.indexOf(item) + 1);
+                        mistEl.innerHTML = `
+                            <span>第${num}問</span>
+                            <span class="mistake-answer">${item.kanji}</span>
+                        `;
+                        mistakeListEl.appendChild(mistEl);
+                    });
+                    mistakeSection.style.display = 'block';
+                    btnRetry.style.display = 'flex';
+                } else {
+                    mistakeSection.style.display = 'none';
+                    btnRetry.style.display = 'none';
+                }
+            }
+
+            window.retryMistakes = function () {
+                currentPracticeList = [...mistakesThisRound]; // コピーしてセット
+                currentQuestionIndex = 0;
+                mistakesThisRound = [];
+
+                document.getElementById('screen-result').classList.remove('active');
+                document.getElementById('screen-practice').classList.add('active');
+
+                startTimer();
+                renderQuestion();
+            };
+
+            // シンプルな紙吹雪実装
+            const confettiCanvas = document.getElementById('confetti-canvas');
+            const ctx = confettiCanvas.getContext('2d');
+
+            function resizeCanvas() {
+                confettiCanvas.width = window.innerWidth;
+                confettiCanvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            function fireConfetti() {
+                const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4CAF50', '#8BC34A', '#CDDC39', '#FFEB3B', '#FFC107', '#FF9800', '#FF5722'];
+
+                for (let i = 0; i < 50; i++) {
+                    confettiParticles.push({
+                        x: confettiCanvas.width / 2,
+                        y: confettiCanvas.height / 2,
+                        r: Math.random() * 6 + 2,
+                        dx: Math.random() * 10 - 5,
+                        dy: Math.random() * -10 - 2,
+                        color: colors[Math.floor(Math.random() * colors.length)],
+                        tilt: Math.floor(Math.random() * 10) - 10,
+                        tiltAngleInc: (Math.random() * 0.07) + 0.05,
+                        tiltAngle: 0
+                    });
+                }
+
+                if (!confettiAnimationId) {
+                    animateConfetti();
+                }
+            }
+
+            function animateConfetti() {
+                ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                let active = false;
+
+                for (let i = 0; i < confettiParticles.length; i++) {
+                    let p = confettiParticles[i];
+                    p.tiltAngle += p.tiltAngleInc;
+                    p.y += (Math.cos(p.tiltAngle) + 1 + p.r / 2) / 2;
+                    p.x += Math.sin(p.tiltAngle) * 2;
+                    p.dy += 0.2; // 重力
+                    p.y += p.dy;
+                    p.x += p.dx;
+
+                    if (p.y <= confettiCanvas.height) {
+                        active = true;
+                    }
+
+                    ctx.beginPath();
+                    ctx.lineWidth = p.r;
+                    ctx.strokeStyle = p.color;
+                    ctx.moveTo(p.x + p.tilt + p.r, p.y);
+                    ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r);
+                    ctx.stroke();
+                }
+
+                // 画面外に出たものを削除
+                confettiParticles = confettiParticles.filter(p => p.y <= confettiCanvas.height);
+
+                if (active) {
+                    confettiAnimationId = requestAnimationFrame(animateConfetti);
+                } else {
+                    confettiAnimationId = null;
+                    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+                }
+            }
+
+            document.getElementById('answer-input').addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    // イベントの伝播を防ぐことで、documentのEnterイベントと同時に発火して
+                    // 一瞬で次の問題に進んでしまうのを防ぎます
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // チェックボタンが出ている状態 ＝ まだ回答していない状態
+                    if (document.getElementById('check-btn').style.display !== 'none') {
+                        checkAnswer();
+                    }
+                    // 次へボタンが出ている状態 ＝ 正解済みの状態
+                    else if (document.getElementById('next-btn').style.display !== 'none') {
+                        nextQuestion();
+                    }
+                }
+            });
+
+            document.addEventListener('keypress', function (e) {
+                if (e.key === 'Enter') {
+                    // input内でEnter処理を完結させるため、ここのnextQuestion処理は無効化する
+                    // （キーボードを出しっぱなしにするため）
+                }
+            });
+
+            // 初期化の最後に同意を確認
+            checkConsent();
+        })();
+    </script>
+</body>
+
+</html>
