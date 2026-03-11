@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+    <title>社会問題集 Premium</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --secondary: #a855f7;
+            --accent: #22d3ee;
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.3);
+            --transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        [data-theme="light"] {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --secondary: #9333ea;
+            --accent: #06b6d4;
+            --bg-dark: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --bg-glass: rgba(0, 0, 0, 0.02);
+            --border-glass: rgba(0, 0, 0, 0.05);
+            --text-main: #0f172a;
+            --text-dim: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            line-height: 1.5;
+        }
+
+        /* 背景グラデーション */
+        .bg-blobs {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+
+        .blob {
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: drift 20s infinite alternate;
+        }
+
+        .blob-1 { top: -10%; left: -10%; background: var(--primary); }
+        .blob-2 { bottom: -10%; right: -10%; background: var(--secondary); animation-delay: -5s; }
+        .blob-3 { top: 40%; left: 50%; background: var(--accent); animation-delay: -10s; }
+
+        @keyframes drift {
+            from { transform: translate(0, 0) scale(1); }
+            to { transform: translate(10%, 10%) scale(1.2); }
+        }
+
+        /* 共通レイアウト */
+        .app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            padding: 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* グラスモルフィズムコンポーネント */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            box-shadow: var(--shadow-premium);
+        }
+
+        /* ホーム画面 */
+        #screen-home {
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .main-hero {
+            text-align: center;
+        }
+
+        .main-hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #fff 30%, var(--primary-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .main-hero p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .nav-card {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-card i {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-card h3 { font-size: 1.4rem; font-weight: 600; }
+        .nav-card p { color: var(--text-dim); font-size: 0.9rem; }
+
+        /* ツールバー */
+        .top-toolbar {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .floating-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary);
+            color: white;
+        }
+
+        /* 認証セクション */
+        .auth-widget {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 100;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+        }
+
+        /* エクスプローラー */
+        #screen-explorer {
+            padding-top: 100px;
+        }
+
+        .explorer-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 80px;
+        }
+
+        .explorer-header-bar {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .breadcrumb-modern {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        .breadcrumb-modern span {
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .breadcrumb-modern span:hover { color: var(--primary-light); }
+        .breadcrumb-modern .active { color: var(--text-main); font-weight: 600; }
+
+        .explorer-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 16px;
+            align-content: flex-start;
+        }
+
+        .grid-item {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+        }
+
+        .grid-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--border-glass);
+            transform: translateY(-4px);
+        }
+
+        .grid-item.selected {
+            background: rgba(99, 102, 241, 0.15);
+            border-color: var(--primary);
+        }
+
+        .grid-item i {
+            font-size: 48px;
+        }
+
+        .grid-item .folder-icon { color: #facc15; }
+        .grid-item .file-icon { color: var(--primary-light); }
+        .grid-item .storage-icon { color: var(--accent); }
+
+        .item-label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            word-break: break-all;
+        }
+
+        /* フッターツール */
+        .explorer-action-bar {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transform: translateY(120%);
+            transition: var(--transition);
+        }
+
+        .explorer-action-bar.visible {
+            transform: translateY(0);
+        }
+
+        .primary-btn {
+            padding: 12px 28px;
+            border-radius: 14px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+            transition: var(--transition);
+        }
+
+        .primary-btn:hover { transform: scale(1.05); background: var(--primary-light); }
+        .primary-btn:active { transform: scale(0.95); }
+
+        /* 練習画面 */
+        .practice-card {
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .question-badge {
+            background: var(--primary);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .answer-input-wrapper {
+            width: 100%;
+            position: relative;
+        }
+
+        #answer-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--border-glass);
+            padding: 16px;
+            font-size: 2rem;
+            text-align: center;
+            color: white;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #answer-input:focus { border-color: var(--primary); }
+
+        /* ロード中 */
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--border-glass);
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* モーダル */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            width: 90%;
+            max-width: 450px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            color: white;
+            outline: none;
+            font-family: inherit;
+        }
+
+        /* レスポンシブ修正 */
+        @media (max-width: 480px) {
+            .nav-grid { grid-template-columns: 1fr; }
+            .main-hero h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;">
+
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <div class="loader-overlay" id="loader">
+        <div class="loader"></div>
+    </div>
+
+    <div class="app-container">
+        <canvas id="confetti-canvas" style="position:fixed; inset:0; pointer-events:none; z-index:1000;"></canvas>
+        <!-- 恒常ツールバー -->
+        <div class="top-toolbar">
+            <div class="floating-btn glass-card" id="btn-back-home" onclick="goHome()" style="display:none;">
+                <i class='bx bx-chevron-left'></i>
+            </div>
+            <div style="flex:1"></div>
+            <div class="floating-btn glass-card" onclick="toggleTheme()">
+                <i class='bx bx-moon' id="theme-icon"></i>
+            </div>
+        </div>
+
+        <!-- 認証ウィジェット -->
+        <div class="auth-widget glass-card" id="auth-widget">
+            <div id="auth-loading" class="loader" style="width:20px; height:20px; border-width:2px;"></div>
+            <div id="auth-user" style="display:none; align-items:center; gap:12px;">
+                <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
+                <span id="user-display-name" style="font-weight:600; font-size:0.9rem;"></span>
+                <i class='bx bx-log-out-circle' style="cursor:pointer; font-size:1.2rem; opacity:0.6" onclick="handleLogout()"></i>
+            </div>
+            <div id="auth-guest" style="display:none; align-items:center; gap:8px; cursor:pointer;" onclick="handleLogin()">
+                <i class='bx bxl-google' style="font-size:1.2rem; color:var(--accent)"></i>
+                <span style="font-size:0.85rem; font-weight:600;">Google Sync</span>
+            </div>
+        </div>
+
+        <!-- ホーム画面 -->
+        <div class="screen active" id="screen-home">
+            <div class="main-hero">
+                <h1>Social Quiz</h1>
+                <p>Learn better with synchronized quiz lists.</p>
+            </div>
+            <div class="nav-grid">
+                <div class="nav-card glass-card" onclick="openExplorer()">
+                    <i class='bx bx-folder-open'></i>
+                    <div>
+                        <h3>Library</h3>
+                        <p>Manage your quiz collections</p>
+                    </div>
+                </div>
+                <div class="nav-card glass-card" onclick="openPracticeSelector()">
+                    <i class='bx bx-play-circle'></i>
+                    <div>
+                        <h3>Practice</h3>
+                        <p>Training mode with selected items</p>
+                    </div>
+                </div>
+            </div>
+            <p style="font-size: 0.75rem; opacity: 0.4; margin-top: 20px;">Beta Version • Continuous Cloud Sync Enabled</p>
+        </div>
+
+        <!-- エクスプローラー画面 -->
+        <div class="screen" id="screen-explorer">
+            <div class="explorer-container glass-card">
+                <div class="explorer-header-bar">
+                    <div class="floating-btn" id="btn-explorer-back" onclick="goBackExplorer()">
+                        <i class='bx bx-arrow-back'></i>
+                    </div>
+                    <div class="breadcrumb-modern" id="explorer-breadcrumb">
+                        <!-- Breadcrumb items inject here -->
+                    </div>
+                </div>
+                
+                <!-- サブツールバー -->
+                <div class="explorer-header-bar" style="padding: 10px 20px; gap: 8px; justify-content: flex-end;">
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="openFolderModal()" title="New Folder"><i class='bx bx-folder-plus'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="addFile()" title="Add Quiz"><i class='bx bx-plus'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="importJson()" title="Import"><i class='bx bx-import'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="exportJson()" title="Export"><i class='bx bx-export'></i></button>
+                    <button class="floating-btn" id="btn-delete" style="width:36px; height:36px; font-size:16px; display:none; color:#f87171;" onclick="deleteSelected()"><i class='bx bx-trash'></i></button>
+                </div>
+
+                <div class="explorer-content" id="explorer-list">
+                    <!-- Grid items inject here -->
+                </div>
+            </div>
+
+            <!-- アクションバー -->
+            <div class="explorer-action-bar glass-card" id="explorer-action-bar">
+                <div id="selection-info">
+                    <div style="font-size:1.1rem; font-weight:700;" id="txt-selected-count">0 Items selected</div>
+                    <div style="font-size:0.8rem; color:var(--text-dim);" id="txt-selected-sub">Ready to practice</div>
+                </div>
+                <button class="primary-btn" id="btn-start-training" onclick="startPracticeFromMenu()">Start Training</button>
+            </div>
+        </div>
+
+        <input type="file" id="json-file-input" accept=".json" style="display: none;">
+
+        <!-- 練習画面 -->
+        <div class="screen" id="screen-practice">
+            <div class="practice-card glass-card">
+                <div class="question-badge" id="txt-progress-badge">Question 1 / 10</div>
+                <div style="text-align:center">
+                    <div style="font-size:0.9rem; color:var(--text-dim); margin-bottom:5px;">Time elapsed: <span id="timer-val">00:00</span></div>
+                    <h2 id="txt-question-number" style="font-size:2.5rem; font-weight:800;">Question 1</h2>
+                </div>
+                
+                <div class="answer-input-wrapper">
+                    <input type="text" id="answer-input" placeholder="Type answer..." autocomplete="off">
+                </div>
+
+                <div id="practice-feedback" style="min-height:24px; font-weight:600; text-align:center;"></div>
+
+                <button class="primary-btn" style="width:100%; padding:18px;" id="btn-submit-answer" onclick="checkAnswer()">Submit Answer</button>
+            </div>
+        </div>
+
+        <!-- リザルト画面 -->
+        <div class="screen" id="screen-result">
+            <div class="practice-card glass-card" style="text-align:center">
+                <i class='bx bxs-trophy' style="font-size:5rem; color:#facc15;"></i>
+                <h2 style="font-size:2.2rem; font-weight:800;">Well Done!</h2>
+                
+                <div style="display:flex; gap:30px; margin:10px 0;">
+                    <div>
+                        <div style="font-size:0.8rem; color:var(--text-dim)">Time</div>
+                        <div style="font-size:1.5rem; font-weight:700;" id="res-time">00:00</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:var(--text-dim)">Accuracy</div>
+                        <div style="font-size:1.5rem; font-weight:700;" id="res-rate">100%</div>
+                    </div>
+                </div>
+
+                <div id="review-section" style="width:100%; text-align:left; display:none;">
+                    <div style="font-weight:700; color:#f87171; margin-bottom:10px;"><i class='bx bx-error-circle'></i> Mistakes</div>
+                    <div id="review-list" style="max-height:150px; overflow-y:auto; font-size:0.9rem; display:flex; flex-direction:column; gap:8px;"></div>
+                </div>
+
+                <div style="display:flex; width:100%; gap:12px;">
+                    <button class="primary-btn" style="flex:1; background:var(--secondary);" id="btn-retry" onclick="retryMistakes()">Retry</button>
+                    <button class="primary-btn" style="flex:1; background:var(--bg-glass); border:1px solid var(--border-glass);" onclick="goHome()">Finish</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- モーダル -->
+    <div class="modal-overlay" id="modal-base">
+        <div class="modal-box glass-card">
+            <h3 id="modal-title">Title</h3>
+            <div id="modal-body"></div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button class="primary-btn" style="flex:1; background:var(--bg-glass); border:1px solid var(--border-glass);" onclick="closeModal()">Cancel</button>
+                <button class="primary-btn" style="flex:1;" id="modal-confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts (Module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWhxfi3efSXXN3LhzjqYAD8r_WT-YWqG0",
+            authDomain: "test-d71db.firebaseapp.com",
+            projectId: "test-d71db",
+            storageBucket: "test-d71db.firebasestorage.app",
+            messagingSenderId: "617785886761",
+            appId: "1:617785886761:web:ae0b8af4c64759ee387438",
+            measurementId: "G-BXGLFRJ3JF"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        window.currentUser = null;
+
+        // AUTH FUNCTIONS
+        window.handleLogin = async () => {
+            try { await signInWithPopup(auth, provider); } 
+            catch (e) { console.error(e); alert("Login failed"); }
+        };
+
+        window.handleLogout = async () => {
+            if (confirm("Logout?")) await signOut(auth);
+        };
+
+        window.syncToCloud = async (data) => {
+            if (!window.currentUser) return;
+            try {
+                await setDoc(doc(db, "users", window.currentUser.uid), {
+                    appData: JSON.stringify(data),
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+                console.log("Synced");
+            } catch (e) { console.error("Sync failed", e); }
+        };
+
+        async function fetchFromCloud(uid) {
+            try {
+                const snap = await getDoc(doc(db, "users", uid));
+                if (snap.exists() && snap.data().appData) return JSON.parse(snap.data().appData);
+            } catch (e) { console.error("Fetch failed", e); }
+            return null;
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            const authUser = document.getElementById('auth-user');
+            const authGuest = document.getElementById('auth-guest');
+            const authLoading = document.getElementById('auth-loading');
+            
+            authLoading.style.display = 'none';
+            if (user) {
+                window.currentUser = user;
+                document.getElementById('user-avatar').src = user.photoURL;
+                document.getElementById('user-display-name').innerText = user.displayName;
+                authUser.style.display = 'flex';
+                authGuest.style.display = 'none';
+
+                const cloudData = await fetchFromCloud(user.uid);
+                if (cloudData) {
+                    window.appData.google = cloudData;
+                    if (window.renderExplorer) window.renderExplorer();
+                }
+            } else {
+                window.currentUser = null;
+                authUser.style.display = 'none';
+                authGuest.style.display = 'flex';
+                window.appData.google = { name: 'Google Storage', folders: [], items: [] };
+                if (window.renderExplorer) window.renderExplorer();
+            }
+        });
+    </script>
+
+    <!-- App Logic -->
+    <script>
+        // DOM ELEMENTS & STATE
+        const screens = ['home', 'explorer', 'practice', 'result'];
+        window.appData = {
+            local: { name: 'Local Storage', folders: [], items: [] },
+            google: { name: 'Google Storage', folders: [], items: [] }
+        };
+        let currentFolder = null;
+        let pathStack = [];
+        let selectedItemForPractice = null;
+        let practiceList = [];
+        let practiceIndex = 0;
+        let practiceStartTime = 0;
+        let practiceTimer = null;
+        let mistakes = [];
+        let confettiParticles = [];
+        let confettiAnimationId = null;
+
+        // INITIALIZATION
+        window.onload = async () => {
+            loadLocalData();
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            }, 800);
+        };
+
+        // NAVIGATION
+        window.changeScreen = (target) => {
+            screens.forEach(s => {
+                const el = document.getElementById(`screen-${s}`);
+                el.classList.remove('active');
+            });
+            document.getElementById(`screen-${target}`).classList.add('active');
+            
+            // Show/Hide back button
+            document.getElementById('btn-back-home').style.display = target === 'home' ? 'none' : 'flex';
+        };
+
+        window.goHome = () => {
+            if (practiceTimer) clearInterval(practiceTimer);
+            currentFolder = null;
+            pathStack = [];
+            selectedItemForPractice = null;
+            changeScreen('home');
+        };
+
+        // THEME
+        window.toggleTheme = () => {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                icon.className = 'bx bx-moon';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                icon.className = 'bx bx-sun';
+            }
+        };
+
+        // DATA MANAGEMENT
+        function loadLocalData() {
+            const saved = localStorage.getItem('shakai_app_data_local');
+            if (saved) window.appData.local = JSON.parse(saved);
+            else {
+                // Migration from old app
+                const old = localStorage.getItem('shakai_app_data');
+                if (old) {
+                    window.appData.local = JSON.parse(old);
+                    localStorage.removeItem('shakai_app_data');
+                    saveData();
+                }
+            }
+        }
+
+        window.saveData = () => {
+            localStorage.setItem('shakai_app_data_local', JSON.stringify(appData.local));
+            if (pathStack[0] === 'google' && window.syncToCloud) {
+                window.syncToCloud(appData.google);
+            }
+        };
+
+        // EXPLORER LOGIC
+        window.openExplorer = () => {
+            changeScreen('explorer');
+            renderExplorer();
+        };
+
+        window.openPracticeSelector = () => {
+            openExplorer();
+            // Optional: Auto-select current folder if any
+        };
+
+        window.renderExplorer = () => {
+            const list = document.getElementById('explorer-list');
+            list.innerHTML = '';
+            updateBreadcrumb();
+            
+            if (pathStack.length === 0) {
+                renderStorageRoots(list);
+                return;
+            }
+
+            const target = currentFolder;
+            
+            // Render Folders
+            target.folders?.forEach(f => {
+                const item = createGridItem(f, 'folder');
+                item.onclick = (e) => handleItemClick(e, f, item, true);
+                list.appendChild(item);
+            });
+
+            // Render Files
+            target.items?.forEach(i => {
+                const item = createGridItem(i, 'file');
+                item.onclick = (e) => handleItemClick(e, i, item, false);
+                list.appendChild(item);
+            });
+
+            if (target.folders?.length === 0 && target.items?.length === 0) {
+                list.innerHTML = '<div style="grid-column: 1/-1; text-align:center; opacity:0.4; margin-top:40px;">No items in this folder</div>';
+            }
+        };
+
+        function renderStorageRoots(list) {
+            const roots = [
+                { key: 'local', name: 'Local Storage', icon: 'bx-hdd' },
+                { key: 'google', name: 'Google Storage', icon: 'bxl-google' }
+            ];
+            roots.forEach(r => {
+                const item = createGridItem(appData[r.key], 'storage', r.icon);
+                item.onclick = () => {
+                    if (r.key === 'google' && !window.currentUser) {
+                        alert("Sign in to access Google Storage"); return;
+                    }
+                    pathStack = [r.key];
+                    currentFolder = appData[r.key];
+                    renderExplorer();
+                };
+                list.appendChild(item);
+            });
+        }
+
+        function createGridItem(data, type, customIcon) {
+            const div = document.createElement('div');
+            div.className = 'grid-item glass-card';
+            if (selectedItemForPractice === data) div.classList.add('selected');
+            
+            let iconClass = customIcon || (type === 'folder' ? 'bx-folder' : 'bx-file-blank');
+            let iconColorClass = `${type}-icon`;
+            
+            div.innerHTML = `
+                <i class='bx ${iconClass} ${iconColorClass}'></i>
+                <div class="item-label">${data.name || 'Quiz: ' + data.kanji}</div>
+            `;
+            return div;
+        }
+
+        let lastClickTime = 0;
+        function handleItemClick(e, data, el, isFolder) {
+            e.stopPropagation();
+            const now = Date.now();
+            
+            // Double click check
+            if (now - lastClickTime < 300 && isFolder) {
+                pathStack.push(currentFolder);
+                currentFolder = data;
+                selectedItemForPractice = null;
+                renderExplorer();
+                return;
+            }
+            lastClickTime = now;
+
+            // Selection check
+            document.querySelectorAll('.grid-item').forEach(x => x.classList.remove('selected'));
+            if (selectedItemForPractice === data) {
+                selectedItemForPractice = null;
+                document.getElementById('btn-delete').style.display = 'none';
+            } else {
+                selectedItemForPractice = data;
+                el.classList.add('selected');
+                document.getElementById('btn-delete').style.display = 'flex';
+            }
+            updateSelectedUI();
+        }
+
+        function updateSelectedUI() {
+            const bar = document.getElementById('explorer-action-bar');
+            const txt = document.getElementById('txt-selected-count');
+            
+            if (selectedItemForPractice) {
+                bar.classList.add('visible');
+                const count = selectedItemForPractice.items ? selectedItemForPractice.items.length : 1;
+                txt.innerText = `${count} Question${count > 1 ? 's' : ''} Selected`;
+            } else {
+                bar.classList.remove('visible');
+            }
+        }
+
+        window.goBackExplorer = () => {
+            if (pathStack.length > 1) {
+                pathStack.pop();
+                currentFolder = pathStack[pathStack.length - 1];
+                if (pathStack.length === 1) currentFolder = appData[pathStack[0]];
+                renderExplorer();
+            } else if (pathStack.length === 1) {
+                pathStack = [];
+                currentFolder = null;
+                renderExplorer();
+            } else goHome();
+        };
+
+        function updateBreadcrumb() {
+            const container = document.getElementById('explorer-breadcrumb');
+            container.innerHTML = '';
+            if (pathStack.length === 0) return;
+
+            const root = appData[pathStack[0]];
+            const rootSpan = document.createElement('span');
+            rootSpan.innerText = root.name;
+            rootSpan.onclick = () => {
+                pathStack = [pathStack[0]];
+                currentFolder = root;
+                renderExplorer();
+            };
+            container.appendChild(rootSpan);
+
+            pathStack.slice(1).forEach((f, idx) => {
+                container.innerHTML += ' / ';
+                const span = document.createElement('span');
+                span.innerText = f.name;
+                span.onclick = () => {
+                    pathStack = pathStack.slice(0, idx + 2);
+                    currentFolder = f;
+                    renderExplorer();
+                };
+                container.appendChild(span);
+            });
+            
+            if (currentFolder && currentFolder !== root) {
+                container.innerHTML += ' / ';
+                const active = document.createElement('span');
+                active.className = 'active';
+                active.innerText = currentFolder.name;
+                container.appendChild(active);
+            }
+        }
+
+        // MODALS
+        window.openModal = (title, bodyHtml, confirmText, confirmAction) => {
+            const overlay = document.getElementById('modal-base');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = bodyHtml;
+            const btn = document.getElementById('modal-confirm-btn');
+            btn.innerText = confirmText;
+            btn.onclick = () => { confirmAction(); closeModal(); };
+            overlay.style.display = 'flex';
+        };
+
+        window.closeModal = () => document.getElementById('modal-base').style.display = 'none';
+
+        window.openFolderModal = () => {
+            openModal('New Folder', '<input type="text" id="modal-input" placeholder="Folder name">', 'Create', () => {
+                const val = document.getElementById('modal-input').value.trim();
+                if (!val) return;
+                const target = currentFolder || appData[pathStack[0]];
+                if (!target.folders) target.folders = [];
+                target.folders.push({ name: val, folders: [], items: [] });
+                renderExplorer(); saveData();
+            });
+        };
+
+        window.addFile = () => {
+            openModal('Add Quizzes', '<textarea id="modal-text" placeholder="Type answers (one per line)"></textarea>', 'Add', () => {
+                const val = document.getElementById('modal-text').value.trim();
+                if (!val) return;
+                const target = currentFolder || appData[pathStack[0]];
+                if (!target.items) target.items = [];
+                val.split('\n').forEach(line => {
+                    if (line.trim()) target.items.push({ kanji: line.trim() });
+                });
+                renderExplorer(); saveData();
+            });
+        };
+
+        window.deleteSelected = () => {
+            if (!selectedItemForPractice) return;
+            if (confirm("Delete this item?")) {
+                const target = getTarget();
+                if (selectedItemForPractice.items !== undefined) {
+                    target.folders = target.folders.filter(f => f !== selectedItemForPractice);
+                } else {
+                    target.items = target.items.filter(i => i !== selectedItemForPractice);
+                }
+                selectedItemForPractice = null;
+                document.getElementById('btn-delete').style.display = 'none';
+                renderExplorer(); saveData(); updateSelectedUI();
+            }
+        };
+
+        window.importJson = () => {
+            const input = document.getElementById('json-file-input');
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    try {
+                        const data = JSON.parse(re.target.result);
+                        const target = getTarget();
+                        if (Array.isArray(data)) {
+                            if (!target.items) target.items = [];
+                            data.forEach(item => { if (item.kanji) target.items.push(item); });
+                        } else {
+                            if (data.folders) target.folders = (target.folders || []).concat(data.folders);
+                            if (data.items) target.items = (target.items || []).concat(data.items);
+                        }
+                        renderExplorer(); saveData();
+                        alert("Imported successfully");
+                    } catch (e) { alert("Invalid JSON file"); }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        };
+
+        window.exportJson = () => {
+            const target = selectedItemForPractice || currentFolder || appData[pathStack[0]];
+            const blob = new Blob([JSON.stringify(target, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = (target.name || 'export') + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        function getTarget() {
+            return currentFolder || appData[pathStack[0]];
+        }
+
+        // PRACTICE LOGIC
+        window.startPracticeFromMenu = () => {
+            let target = selectedItemForPractice || currentFolder || appData[pathStack[0]];
+            if (!target) return;
+            
+            // Collect all items from folder or use single item
+            if (target.items) {
+                practiceList = [...target.items];
+            } else {
+                practiceList = [target];
+            }
+            
+            if (practiceList.length === 0) { alert("No questions found"); return; }
+            
+            // Shuffle
+            practiceList.sort(() => Math.random() - 0.5);
+            
+            practiceIndex = 0;
+            mistakes = [];
+            practiceStartTime = Date.now();
+            changeScreen('practice');
+            startTimer();
+            showQuestion();
+        };
+
+        function startTimer() {
+            if (practiceTimer) clearInterval(practiceTimer);
+            practiceTimer = setInterval(() => {
+                const diff = Math.floor((Date.now() - practiceStartTime) / 1000);
+                const m = String(Math.floor(diff / 60)).padStart(2, '0');
+                const s = String(diff % 60).padStart(2, '0');
+                document.getElementById('timer-val').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        function showQuestion() {
+            const q = practiceList[practiceIndex];
+            document.getElementById('txt-progress-badge').innerText = `Question ${practiceIndex + 1} / ${practiceList.length}`;
+            document.getElementById('txt-question-number').innerText = `Question ${practiceIndex + 1}`;
+            document.getElementById('answer-input').value = '';
+            document.getElementById('answer-input').focus();
+            document.getElementById('practice-feedback').innerText = '';
+            document.getElementById('btn-submit-answer').style.background = 'var(--primary)';
+            document.getElementById('btn-submit-answer').innerText = 'Submit Answer';
+        }
+
+        window.checkAnswer = () => {
+            const input = document.getElementById('answer-input').value.trim();
+            const correct = practiceList[practiceIndex].kanji;
+            const feedback = document.getElementById('practice-feedback');
+            
+            if (input === correct) {
+                feedback.innerText = 'Correct!';
+                feedback.style.color = '#4ade80';
+                setTimeout(nextQuestion, 800);
+            } else {
+                feedback.innerText = `Wrong! Correct was "${correct}"`;
+                feedback.style.color = '#f87171';
+                mistakes.push(practiceList[practiceIndex]);
+                document.getElementById('btn-submit-answer').innerText = 'Next Question';
+                document.getElementById('btn-submit-answer').onclick = nextQuestion;
+            }
+        };
+
+        function nextQuestion() {
+            document.getElementById('btn-submit-answer').onclick = window.checkAnswer;
+            practiceIndex++;
+            if (practiceIndex < practiceList.length) {
+                showQuestion();
+            } else {
+                finishPractice();
+            }
+        }
+
+        function finishPractice() {
+            clearInterval(practiceTimer);
+            changeScreen('result');
+            
+            const diff = Math.floor((Date.now() - practiceStartTime) / 1000);
+            const m = String(Math.floor(diff / 60)).padStart(2, '0');
+            const s = String(diff % 60).padStart(2, '0');
+            document.getElementById('res-time').innerText = `${m}:${s}`;
+            
+            const rate = Math.round(((practiceList.length - mistakes.length) / practiceList.length) * 100);
+            document.getElementById('res-rate').innerText = `${rate}%`;
+            
+            const review = document.getElementById('review-section');
+            const list = document.getElementById('review-list');
+            if (mistakes.length > 0) {
+                review.style.display = 'block';
+                list.innerHTML = '';
+                mistakes.forEach(m => {
+                    list.innerHTML += `<div class="glass-card" style="padding:10px 15px; background:rgba(248,113,113,0.1)">${m.kanji}</div>`;
+                });
+                document.getElementById('btn-retry').style.display = 'block';
+            } else {
+                review.style.display = 'none';
+                document.getElementById('btn-retry').style.display = 'none';
+                startConfetti();
+            }
+        }
+
+        // CONFETTI LOGIC
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            confettiParticles = [];
+            for(let i=0; i<150; i++) {
+                confettiParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+                    velX: Math.random() * 3 - 1.5,
+                    velY: Math.random() * 5 + 3,
+                    rot: Math.random() * 360,
+                    rotVel: Math.random() * 10 - 5
+                });
+            }
+            
+            function update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confettiParticles.forEach(p => {
+                    p.x += p.velX;
+                    p.y += p.velY;
+                    p.rot += p.rotVel;
+                    if(p.y > canvas.height) p.y = -20;
+                    
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.restore();
+                });
+                confettiAnimationId = requestAnimationFrame(update);
+            }
+            update();
+            setTimeout(() => { if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); ctx.clearRect(0,0,canvas.width,canvas.height); }, 5000);
+        }
+
+        window.retryMistakes = () => {
+            practiceList = [...mistakes];
+            practiceList.sort(() => Math.random() - 0.5);
+            practiceIndex = 0;
+            mistakes = [];
+            practiceStartTime = Date.now();
+            changeScreen('practice');
+            startTimer();
+            showQuestion();
+        };
+
+        // Utility: Enter key support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const active = document.querySelector('.screen.active');
+                if (active.id === 'screen-practice') {
+                    const btn = document.getElementById('btn-submit-answer');
+                    if (btn) btn.click();
+                }
+            }
+        });
+
+    </script>
+</body>
+</html>
