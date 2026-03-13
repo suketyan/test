@@ -1,15 +1,19 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
     <title>社会問題集 Premium</title>
     <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
-    
+
     <style>
         :root {
             --primary: #6366f1;
@@ -32,10 +36,10 @@
             --secondary: #9333ea;
             --accent: #06b6d4;
             --bg-dark: #f1f5f9;
-            --bg-card: rgba(255, 255, 255, 0.8);
-            --bg-glass: rgba(0, 0, 0, 0.02);
-            --border-glass: rgba(0, 0, 0, 0.05);
-            --text-main: #0f172a;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-glass: rgba(0, 0, 0, 0.05);
+            --border-glass: rgba(0, 0, 0, 0.1);
+            --text-main: #1e293b;
             --text-dim: #64748b;
         }
 
@@ -76,13 +80,34 @@
             animation: drift 20s infinite alternate;
         }
 
-        .blob-1 { top: -10%; left: -10%; background: var(--primary); }
-        .blob-2 { bottom: -10%; right: -10%; background: var(--secondary); animation-delay: -5s; }
-        .blob-3 { top: 40%; left: 50%; background: var(--accent); animation-delay: -10s; }
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            background: var(--primary);
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            right: -10%;
+            background: var(--secondary);
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            top: 40%;
+            left: 50%;
+            background: var(--accent);
+            animation-delay: -10s;
+        }
 
         @keyframes drift {
-            from { transform: translate(0, 0) scale(1); }
-            to { transform: translate(10%, 10%) scale(1.2); }
+            from {
+                transform: translate(0, 0) scale(1);
+            }
+
+            to {
+                transform: translate(10%, 10%) scale(1.2);
+            }
         }
 
         /* 共通レイアウト */
@@ -135,7 +160,7 @@
             font-size: 3.5rem;
             font-weight: 800;
             letter-spacing: -1px;
-            background: linear-gradient(135deg, #fff 30%, var(--primary-light));
+            background: linear-gradient(135deg, var(--text-main) 30%, var(--primary-light));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -184,8 +209,15 @@
             box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
         }
 
-        .nav-card h3 { font-size: 1.4rem; font-weight: 600; }
-        .nav-card p { color: var(--text-dim); font-size: 0.9rem; }
+        .nav-card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .nav-card p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
 
         /* ツールバー */
         .top-toolbar {
@@ -209,12 +241,54 @@
             font-size: 22px;
             cursor: pointer;
             transition: var(--transition);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .floating-btn {
+            background: rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
         .floating-btn:hover {
             transform: scale(1.1);
             background: var(--primary);
-            color: white;
+            color: white !important;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* コンテキストメニュー */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 8px 0;
+            z-index: 2000;
+            display: none;
+            box-shadow: var(--shadow-premium);
+            min-width: 160px;
+        }
+
+        .context-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .context-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-item i {
+            font-size: 1.1rem;
         }
 
         /* 認証セクション */
@@ -231,10 +305,22 @@
         }
 
         .user-avatar {
-            width: 36px;
-            height: 36px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
-            border: 2px solid var(--primary);
+            border: 3px solid var(--primary);
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .settings-item:last-child {
+            border-bottom: none;
         }
 
         /* エクスプローラー */
@@ -269,37 +355,65 @@
         .breadcrumb-modern span {
             cursor: pointer;
             transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .breadcrumb-modern span:hover { color: var(--primary-light); }
-        .breadcrumb-modern .active { color: var(--text-main); font-weight: 600; }
+        .breadcrumb-modern span:hover {
+            color: var(--primary-light);
+        }
+
+        .breadcrumb-modern .active {
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: default;
+        }
+
+        .breadcrumb-modern .active:hover {
+            color: var(--text-main);
+        }
+
+        .breadcrumb-modern i {
+            font-size: 1.2rem;
+        }
 
         .explorer-content {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 16px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 12px;
             align-content: flex-start;
+            position: relative;
+        }
+
+        .selection-marquee {
+            position: absolute;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            pointer-events: none;
+            z-index: 10;
+            display: none;
         }
 
         .grid-item {
-            padding: 20px;
+            padding: 16px;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
-            gap: 12px;
+            gap: 8px;
             cursor: pointer;
             transition: var(--transition);
-            border: 1px solid transparent;
+            border: 2px solid transparent;
+            border-radius: 16px;
         }
 
         .grid-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: var(--border-glass);
-            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
         }
 
         .grid-item.selected {
@@ -308,12 +422,32 @@
         }
 
         .grid-item i {
-            font-size: 48px;
+            font-size: 40px;
         }
 
-        .grid-item .folder-icon { color: #facc15; }
-        .grid-item .file-icon { color: var(--primary-light); }
-        .grid-item .storage-icon { color: var(--accent); }
+        .grid-item .folder-icon {
+            color: #facc15;
+        }
+
+        .grid-item .file-icon {
+            color: var(--primary-light);
+        }
+
+        .grid-item .storage-icon {
+            color: var(--accent);
+        }
+
+        .grid-item .google-icon {
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grid-item .google-icon svg {
+            width: 32px;
+            height: 32px;
+        }
 
         .item-label {
             font-size: 0.9rem;
@@ -351,8 +485,14 @@
             transition: var(--transition);
         }
 
-        .primary-btn:hover { transform: scale(1.05); background: var(--primary-light); }
-        .primary-btn:active { transform: scale(0.95); }
+        .primary-btn:hover {
+            transform: scale(1.05);
+            background: var(--primary-light);
+        }
+
+        .primary-btn:active {
+            transform: scale(0.95);
+        }
 
         /* 練習画面 */
         .practice-card {
@@ -380,6 +520,38 @@
             position: relative;
         }
 
+        .correct-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: #4ade80;
+            font-weight: 800;
+            z-index: 5;
+            pointer-events: none;
+            opacity: 0;
+            transform: scale(0.5);
+        }
+
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1.2);
+            }
+
+            100% {
+                opacity: 0;
+                transform: scale(1);
+            }
+        }
+
         #answer-input {
             width: 100%;
             background: transparent;
@@ -388,12 +560,14 @@
             padding: 16px;
             font-size: 2rem;
             text-align: center;
-            color: white;
+            color: var(--text-main);
             outline: none;
             transition: border-color 0.3s;
         }
 
-        #answer-input:focus { border-color: var(--primary); }
+        #answer-input:focus {
+            border-color: var(--primary);
+        }
 
         /* ロード中 */
         .loader-overlay {
@@ -417,15 +591,20 @@
         }
 
         @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         /* モーダル */
         .modal-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
             z-index: 1000;
             display: none;
@@ -442,7 +621,8 @@
             gap: 20px;
         }
 
-        input[type="text"], textarea {
+        input[type="text"],
+        textarea {
             width: 100%;
             padding: 14px;
             border-radius: 12px;
@@ -454,18 +634,61 @@
         }
 
         /* レスポンシブ修正 */
-        @media (max-width: 480px) {
-            .nav-grid { grid-template-columns: 1fr; }
-            .main-hero h1 { font-size: 2.5rem; }
+        @media (max-width: 600px) {
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-item {
+                padding: 12px;
+            }
+
+            .grid-item i {
+                font-size: 32px;
+            }
+
+            .item-label {
+                font-size: 0.8rem;
+            }
+
+            .main-hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .explorer-action-bar {
+                bottom: 16px;
+                left: 16px;
+                right: 16px;
+                padding: 12px 16px;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .primary-btn {
+                width: 100%;
+                text-align: center;
+            }
+
+            #selection-info {
+                text-align: center;
+            }
         }
     </style>
 </head>
+
 <body oncontextmenu="return false;">
 
     <div class="bg-blobs">
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
         <div class="blob blob-3"></div>
+    </div>
+
+    <!-- コンテキストメニュー -->
+    <div class="context-menu glass-card" id="context-menu" style="display:none;">
+        <div class="context-item" onclick="startPracticeFromMenu()"><i class='bx bx-play-circle'></i> 練習を開始</div>
+        <div class="context-item" onclick="openRenameModal()"><i class='bx bx-edit-alt'></i> 名前を変更</div>
+        <div class="context-item" style="color:#f87171;" onclick="deleteSelected()"><i class='bx bx-trash'></i> 削除</div>
     </div>
 
     <div class="loader-overlay" id="loader">
@@ -480,22 +703,57 @@
                 <i class='bx bx-chevron-left'></i>
             </div>
             <div style="flex:1"></div>
-            <div class="floating-btn glass-card" onclick="toggleTheme()">
-                <i class='bx bx-moon' id="theme-icon"></i>
+            <div class="floating-btn glass-card" onclick="openSettings()">
+                <i class='bx bx-cog'></i>
             </div>
         </div>
 
-        <!-- 認証ウィジェット -->
-        <div class="auth-widget glass-card" id="auth-widget">
-            <div id="auth-loading" class="loader" style="width:20px; height:20px; border-width:2px;"></div>
-            <div id="auth-user" style="display:none; align-items:center; gap:12px;">
-                <img id="user-avatar" class="user-avatar" src="" alt="Avatar">
-                <span id="user-display-name" style="font-weight:600; font-size:0.9rem;"></span>
-                <i class='bx bx-log-out-circle' style="cursor:pointer; font-size:1.2rem; opacity:0.6" onclick="handleLogout()"></i>
-            </div>
-            <div id="auth-guest" style="display:none; align-items:center; gap:8px; cursor:pointer;" onclick="handleLogin()">
-                <i class='bx bxl-google' style="font-size:1.2rem; color:var(--accent)"></i>
-                <span style="font-size:0.85rem; font-weight:600;">Google Sync</span>
+        <!-- 設定画面 (以前のauth-widgetを統合) -->
+        <div class="screen" id="screen-settings">
+            <div class="practice-card glass-card" style="max-width:450px; padding:0; overflow:hidden;">
+                <div
+                    style="padding:40px; text-align:center; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border-glass);">
+                    <div id="settings-user-info">
+                        <img id="user-avatar" class="user-avatar" src="https://via.placeholder.com/60" alt="Avatar">
+                        <h2 id="user-display-name" style="margin-top:15px; font-size:1.5rem;">Guest User</h2>
+                        <p id="user-email" style="color:var(--text-dim); font-size:0.9rem;">Sign in to sync with Google
+                        </p>
+                    </div>
+                </div>
+
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <span>Appearance</span>
+                        <div class="floating-btn glass-card"
+                            style="width:100px; height:40px; font-size:0.9rem; gap:8px;" onclick="toggleTheme()">
+                            <i class='bx bx-moon' id="theme-icon-settings"></i> <span id="txt-theme-label">Dark</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-item" id="btn-google-sync">
+                        <span>Google Sync</span>
+                        <button class="primary-btn" style="padding:8px 16px; font-size:0.9rem;"
+                            onclick="handleLogin()">Login</button>
+                    </div>
+
+                    <div class="settings-item" id="btn-google-signout" style="display:none;">
+                        <span>Account</span>
+                        <button class="primary-btn"
+                            style="padding:8px 16px; font-size:0.9rem; background:rgba(248,113,113,0.15); color:#f87171; box-shadow:none;"
+                            onclick="handleLogout()">Logout</button>
+                    </div>
+
+                    <div class="settings-item">
+                        <span>Version</span>
+                        <span style="color:var(--text-dim);">Beta 2.0</span>
+                    </div>
+                </div>
+
+                <div style="padding:20px;">
+                    <button class="primary-btn"
+                        style="width:100%; background:var(--bg-glass); border:1px solid var(--border-glass);"
+                        onclick="goHome()">Close Settings</button>
+                </div>
             </div>
         </div>
 
@@ -521,7 +779,8 @@
                     </div>
                 </div>
             </div>
-            <p style="font-size: 0.75rem; opacity: 0.4; margin-top: 20px;">Beta Version • Continuous Cloud Sync Enabled</p>
+            <p style="font-size: 0.75rem; opacity: 0.4; margin-top: 20px;">Beta Version • Continuous Cloud Sync Enabled
+            </p>
         </div>
 
         <!-- エクスプローラー画面 -->
@@ -535,17 +794,26 @@
                         <!-- Breadcrumb items inject here -->
                     </div>
                 </div>
-                
+
                 <!-- サブツールバー -->
                 <div class="explorer-header-bar" style="padding: 10px 20px; gap: 8px; justify-content: flex-end;">
-                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="openFolderModal()" title="New Folder"><i class='bx bx-folder-plus'></i></button>
-                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="addFile()" title="Add Quiz"><i class='bx bx-plus'></i></button>
-                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="importJson()" title="Import"><i class='bx bx-import'></i></button>
-                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="exportJson()" title="Export"><i class='bx bx-export'></i></button>
-                    <button class="floating-btn" id="btn-delete" style="width:36px; height:36px; font-size:16px; display:none; color:#f87171;" onclick="deleteSelected()"><i class='bx bx-trash'></i></button>
+                    <button class="floating-btn" id="btn-select-mode" style="width:36px; height:36px; font-size:16px;"
+                        onclick="toggleSelectMode()" title="Select Mode"><i class='bx bx-select-multiple'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;"
+                        onclick="openFolderModal()" title="New Folder"><i class='bx bx-folder-plus'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="addFile()"
+                        title="Add Quiz"><i class='bx bx-plus'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="importJson()"
+                        title="Import"><i class='bx bx-import'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="exportJson()"
+                        title="Export"><i class='bx bx-export'></i></button>
+                    <button class="floating-btn" id="btn-delete"
+                        style="width:36px; height:36px; font-size:16px; display:none; color:#f87171;"
+                        onclick="deleteSelected()"><i class='bx bx-trash'></i></button>
                 </div>
 
-                <div class="explorer-content" id="explorer-list">
+                <div class="explorer-content" id="explorer-list" oncontextmenu="handleBackgroundContextMenu(event)">
+                    <div class="selection-marquee" id="marquee"></div>
                     <!-- Grid items inject here -->
                 </div>
             </div>
@@ -556,7 +824,8 @@
                     <div style="font-size:1.1rem; font-weight:700;" id="txt-selected-count">0 Items selected</div>
                     <div style="font-size:0.8rem; color:var(--text-dim);" id="txt-selected-sub">Ready to practice</div>
                 </div>
-                <button class="primary-btn" id="btn-start-training" onclick="startPracticeFromMenu()">Start Training</button>
+                <button class="primary-btn" id="btn-start-training" onclick="startPracticeFromMenu()">Start
+                    Training</button>
             </div>
         </div>
 
@@ -567,17 +836,20 @@
             <div class="practice-card glass-card">
                 <div class="question-badge" id="txt-progress-badge">Question 1 / 10</div>
                 <div style="text-align:center">
-                    <div style="font-size:0.9rem; color:var(--text-dim); margin-bottom:5px;">Time elapsed: <span id="timer-val">00:00</span></div>
+                    <div style="font-size:0.9rem; color:var(--text-dim); margin-bottom:5px;">Time elapsed: <span
+                            id="timer-val">00:00</span></div>
                     <h2 id="txt-question-number" style="font-size:2.5rem; font-weight:800;">Question 1</h2>
                 </div>
-                
+
                 <div class="answer-input-wrapper">
+                    <div class="correct-overlay" id="correct-label">正解</div>
                     <input type="text" id="answer-input" placeholder="Type answer..." autocomplete="off">
                 </div>
 
                 <div id="practice-feedback" style="min-height:24px; font-weight:600; text-align:center;"></div>
 
-                <button class="primary-btn" style="width:100%; padding:18px;" id="btn-submit-answer" onclick="checkAnswer()">Submit Answer</button>
+                <button class="primary-btn" style="width:100%; padding:18px;" id="btn-submit-answer"
+                    onclick="checkAnswer()">Submit Answer</button>
             </div>
         </div>
 
@@ -586,7 +858,7 @@
             <div class="practice-card glass-card" style="text-align:center">
                 <i class='bx bxs-trophy' style="font-size:5rem; color:#facc15;"></i>
                 <h2 style="font-size:2.2rem; font-weight:800;">Well Done!</h2>
-                
+
                 <div style="display:flex; gap:30px; margin:10px 0;">
                     <div>
                         <div style="font-size:0.8rem; color:var(--text-dim)">Time</div>
@@ -599,13 +871,19 @@
                 </div>
 
                 <div id="review-section" style="width:100%; text-align:left; display:none;">
-                    <div style="font-weight:700; color:#f87171; margin-bottom:10px;"><i class='bx bx-error-circle'></i> Mistakes</div>
-                    <div id="review-list" style="max-height:150px; overflow-y:auto; font-size:0.9rem; display:flex; flex-direction:column; gap:8px;"></div>
+                    <div style="font-weight:700; color:#f87171; margin-bottom:10px;"><i class='bx bx-error-circle'></i>
+                        Mistakes</div>
+                    <div id="review-list"
+                        style="max-height:150px; overflow-y:auto; font-size:0.9rem; display:flex; flex-direction:column; gap:8px;">
+                    </div>
                 </div>
 
                 <div style="display:flex; width:100%; gap:12px;">
-                    <button class="primary-btn" style="flex:1; background:var(--secondary);" id="btn-retry" onclick="retryMistakes()">Retry</button>
-                    <button class="primary-btn" style="flex:1; background:var(--bg-glass); border:1px solid var(--border-glass);" onclick="goHome()">Finish</button>
+                    <button class="primary-btn" style="flex:1; background:var(--secondary);" id="btn-retry"
+                        onclick="retryMistakes()">Retry</button>
+                    <button class="primary-btn"
+                        style="flex:1; background:var(--bg-glass); border:1px solid var(--border-glass);"
+                        onclick="goHome()">Finish</button>
                 </div>
             </div>
         </div>
@@ -618,7 +896,9 @@
             <h3 id="modal-title">Title</h3>
             <div id="modal-body"></div>
             <div style="display:flex; gap:12px; margin-top:20px;">
-                <button class="primary-btn" style="flex:1; background:var(--bg-glass); border:1px solid var(--border-glass);" onclick="closeModal()">Cancel</button>
+                <button class="primary-btn"
+                    style="flex:1; background:var(--bg-glass); border:1px solid var(--border-glass);"
+                    onclick="closeModal()">Cancel</button>
                 <button class="primary-btn" style="flex:1;" id="modal-confirm-btn">Confirm</button>
             </div>
         </div>
@@ -649,7 +929,7 @@
 
         // AUTH FUNCTIONS
         window.handleLogin = async () => {
-            try { await signInWithPopup(auth, provider); } 
+            try { await signInWithPopup(auth, provider); }
             catch (e) { console.error(e); alert("Login failed"); }
         };
 
@@ -677,17 +957,16 @@
         }
 
         onAuthStateChanged(auth, async (user) => {
-            const authUser = document.getElementById('auth-user');
-            const authGuest = document.getElementById('auth-guest');
-            const authLoading = document.getElementById('auth-loading');
-            
-            authLoading.style.display = 'none';
+            const btnGoogleSync = document.getElementById('btn-google-sync');
+            const btnGoogleSignout = document.getElementById('btn-google-signout');
+
             if (user) {
                 window.currentUser = user;
-                document.getElementById('user-avatar').src = user.photoURL;
+                document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/60';
                 document.getElementById('user-display-name').innerText = user.displayName;
-                authUser.style.display = 'flex';
-                authGuest.style.display = 'none';
+                document.getElementById('user-email').innerText = user.email;
+                btnGoogleSync.style.display = 'none';
+                btnGoogleSignout.style.display = 'flex';
 
                 const cloudData = await fetchFromCloud(user.uid);
                 if (cloudData) {
@@ -696,8 +975,11 @@
                 }
             } else {
                 window.currentUser = null;
-                authUser.style.display = 'none';
-                authGuest.style.display = 'flex';
+                document.getElementById('user-avatar').src = 'https://via.placeholder.com/60';
+                document.getElementById('user-display-name').innerText = 'Guest User';
+                document.getElementById('user-email').innerText = 'Sign in to sync with Google';
+                btnGoogleSync.style.display = 'flex';
+                btnGoogleSignout.style.display = 'none';
                 window.appData.google = { name: 'Google Storage', folders: [], items: [] };
                 if (window.renderExplorer) window.renderExplorer();
             }
@@ -707,7 +989,7 @@
     <!-- App Logic -->
     <script>
         // DOM ELEMENTS & STATE
-        const screens = ['home', 'explorer', 'practice', 'result'];
+        const screens = ['home', 'explorer', 'practice', 'result', 'settings'];
         window.appData = {
             local: { name: 'Local Storage', folders: [], items: [] },
             google: { name: 'Google Storage', folders: [], items: [] }
@@ -715,6 +997,37 @@
         let currentFolder = null;
         let pathStack = [];
         let selectedItemForPractice = null;
+        let multiSelectItems = new Set();
+
+        window.goHome = () => {
+            if (practiceTimer) clearInterval(practiceTimer);
+            currentFolder = null;
+            pathStack = [];
+            selectedItemForPractice = null;
+            multiSelectItems.clear();
+            changeScreen('home');
+        };
+
+        window.goBackExplorer = () => {
+            if (pathStack.length > 0) {
+                pathStack.pop();
+                currentFolder = pathStack.length === 0 ? null : findFolder(pathStack);
+                multiSelectItems.clear();
+                selectedItemForPractice = null;
+                renderExplorer();
+            } else {
+                goHome();
+            }
+        };
+
+        function findFolder(stack) {
+            let target = appData[stack[0]];
+            for (let i = 1; i < stack.length; i++) {
+                target = target.folders.find(f => f.name === stack[i]);
+            }
+            return target;
+        }
+        let isSelectMode = false;
         let practiceList = [];
         let practiceIndex = 0;
         let practiceStartTime = 0;
@@ -722,6 +1035,7 @@
         let mistakes = [];
         let confettiParticles = [];
         let confettiAnimationId = null;
+        let isChecking = false;
 
         // INITIALIZATION
         window.onload = async () => {
@@ -739,29 +1053,26 @@
                 el.classList.remove('active');
             });
             document.getElementById(`screen-${target}`).classList.add('active');
-            
+
             // Show/Hide back button
             document.getElementById('btn-back-home').style.display = target === 'home' ? 'none' : 'flex';
         };
 
-        window.goHome = () => {
-            if (practiceTimer) clearInterval(practiceTimer);
-            currentFolder = null;
-            pathStack = [];
-            selectedItemForPractice = null;
-            changeScreen('home');
-        };
+        window.openSettings = () => changeScreen('settings');
 
         // THEME
         window.toggleTheme = () => {
             const body = document.body;
-            const icon = document.getElementById('theme-icon');
+            const iconSettings = document.getElementById('theme-icon-settings');
+            const label = document.getElementById('txt-theme-label');
             if (body.getAttribute('data-theme') === 'light') {
                 body.removeAttribute('data-theme');
-                icon.className = 'bx bx-moon';
+                if (iconSettings) iconSettings.className = 'bx bx-moon';
+                if (label) label.innerText = 'Dark';
             } else {
                 body.setAttribute('data-theme', 'light');
-                icon.className = 'bx bx-sun';
+                if (iconSettings) iconSettings.className = 'bx bx-sun';
+                if (label) label.innerText = 'Light';
             }
         };
 
@@ -800,157 +1111,255 @@
 
         window.renderExplorer = () => {
             const list = document.getElementById('explorer-list');
-            list.innerHTML = '';
+            const breadcrumb = document.getElementById('explorer-breadcrumb');
+            list.innerHTML = '<div class="selection-marquee" id="marquee"></div>';
+
             updateBreadcrumb();
-            
+            updateActionButtons();
+
+            const target = currentFolder || (pathStack.length === 0 ? { folders: ['local', 'google'] } : appData[pathStack[0]]);
+
             if (pathStack.length === 0) {
-                renderStorageRoots(list);
-                return;
+                target.folders.forEach(key => {
+                    const item = appData[key];
+                    list.appendChild(createGridItem(item.name, key === 'google' ? 'google' : 'storage', () => { pathStack.push(key); renderExplorer(); }));
+                });
+            } else {
+                const folders = target.folders || [];
+                const items = target.items || [];
+
+                folders.forEach(f => {
+                    list.appendChild(createGridItem(f.name, 'folder', (el) => handleItemClick(f, el), () => { currentFolder = f; pathStack.push(f.name); renderExplorer(); }));
+                });
+                items.forEach(i => {
+                    list.appendChild(createGridItem(i.kanji, 'file', (el) => handleItemClick(i, el)));
+                });
             }
-
-            const target = currentFolder;
-            
-            // Render Folders
-            target.folders?.forEach(f => {
-                const item = createGridItem(f, 'folder');
-                item.onclick = (e) => handleItemClick(e, f, item, true);
-                list.appendChild(item);
-            });
-
-            // Render Files
-            target.items?.forEach(i => {
-                const item = createGridItem(i, 'file');
-                item.onclick = (e) => handleItemClick(e, i, item, false);
-                list.appendChild(item);
-            });
-
-            if (target.folders?.length === 0 && target.items?.length === 0) {
-                list.innerHTML = '<div style="grid-column: 1/-1; text-align:center; opacity:0.4; margin-top:40px;">No items in this folder</div>';
-            }
+            updateSelectedUI();
+            setupDragAndDrop();
         };
 
-        function renderStorageRoots(list) {
-            const roots = [
-                { key: 'local', name: 'Local Storage', icon: 'bx-hdd' },
-                { key: 'google', name: 'Google Storage', icon: 'bxl-google' }
-            ];
-            roots.forEach(r => {
-                const item = createGridItem(appData[r.key], 'storage', r.icon);
-                item.onclick = () => {
-                    if (r.key === 'google' && !window.currentUser) {
-                        alert("Sign in to access Google Storage"); return;
-                    }
-                    pathStack = [r.key];
-                    currentFolder = appData[r.key];
-                    renderExplorer();
-                };
-                list.appendChild(item);
+        function updateActionButtons() {
+            const isRoot = pathStack.length === 0;
+            const btns = document.querySelectorAll('.explorer-header-bar .floating-btn:not(#btn-explorer-back):not(#btn-select-mode)');
+            btns.forEach(btn => {
+                if (isRoot) {
+                    btn.style.opacity = '0.3';
+                    btn.style.pointerEvents = 'none';
+                    btn.title = "Actions restricted in root";
+                } else {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'all';
+                    btn.title = "";
+                }
             });
         }
 
-        function createGridItem(data, type, customIcon) {
+        window.updateBreadcrumb = () => {
+            const breadcrumb = document.getElementById('explorer-breadcrumb');
+            breadcrumb.innerHTML = '';
+            
+            const rootSpan = document.createElement('span');
+            rootSpan.innerHTML = `<i class='bx bx-hdd'></i> Storage Root`;
+            rootSpan.onclick = () => { pathStack = []; currentFolder = null; renderExplorer(); };
+            if (pathStack.length === 0) rootSpan.classList.add('active');
+            breadcrumb.appendChild(rootSpan);
+
+            pathStack.forEach((p, idx) => {
+                breadcrumb.innerHTML += ' <i class="bx bx-chevron-right" style="opacity:0.3"></i> ';
+                const span = document.createElement('span');
+                const label = idx === 0 ? appData[p].name : p;
+                span.innerText = label;
+                span.onclick = () => {
+                    pathStack = pathStack.slice(0, idx + 1);
+                    currentFolder = idx === 0 ? null : findFolder(pathStack);
+                    multiSelectItems.clear();
+                    selectedItemForPractice = null;
+                    renderExplorer();
+                };
+                if (idx === pathStack.length - 1) span.classList.add('active');
+                breadcrumb.appendChild(span);
+            });
+        };
+
+        function createGridItem(label, type, onclick, ondoubleclick) {
             const div = document.createElement('div');
             div.className = 'grid-item glass-card';
-            if (selectedItemForPractice === data) div.classList.add('selected');
-            
-            let iconClass = customIcon || (type === 'folder' ? 'bx-folder' : 'bx-file-blank');
-            let iconColorClass = `${type}-icon`;
-            
-            div.innerHTML = `
-                <i class='bx ${iconClass} ${iconColorClass}'></i>
-                <div class="item-label">${data.name || 'Quiz: ' + data.kanji}</div>
-            `;
+            div.setAttribute('draggable', 'true');
+            div.dataset.label = label;
+
+            let iconHtml = '';
+            if (type === 'google') {
+                iconHtml = `<div class="google-icon"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z"/></svg></div>`;
+            } else {
+                iconHtml = `<i class='bx ${type === 'folder' ? 'bxs-folder folder-icon' : type === 'storage' ? 'bx-hdd storage-icon' : 'bx-file file-icon'}'></i>`;
+            }
+
+            div.innerHTML = `${iconHtml}<div class="item-label">${label}</div>`;
+            div.onclick = (e) => { e.stopPropagation(); onclick(div); };
+            if (ondoubleclick) div.ondblclick = (e) => { e.stopPropagation(); ondoubleclick(); };
+
+            // Context Menu
+            div.oncontextmenu = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const itemObj = findItemByLabel(label);
+                if (itemObj) {
+                    if (pathStack.length === 0) return; // Disable menu in Storage Root
+                    if (!multiSelectItems.has(itemObj)) {
+                        // Don't select on right click unless not selected? 
+                        // Actually the user said "Left click only for selection".
+                        // So we just show the menu for the current item if it's already selected, 
+                        // or we can select it temporarily for the menu?
+                        // Let's stick to "Just show menu if it's already selected, otherwise do nothing or show menu for it anyway".
+                    }
+                    showContextMenu(e.clientX, e.clientY);
+                }
+            };
+
+            // Re-select if in multiple selection
+            const itemObj = findItemByLabel(label);
+            if (itemObj && multiSelectItems.has(itemObj)) div.classList.add('selected');
+            else if (itemObj && selectedItemForPractice === itemObj) div.classList.add('selected');
+
             return div;
         }
 
-        let lastClickTime = 0;
-        function handleItemClick(e, data, el, isFolder) {
-            e.stopPropagation();
-            const now = Date.now();
-            
-            // Double click check
-            if (now - lastClickTime < 300 && isFolder) {
-                pathStack.push(currentFolder);
-                currentFolder = data;
-                selectedItemForPractice = null;
-                renderExplorer();
-                return;
-            }
-            lastClickTime = now;
+        function showContextMenu(x, y) {
+            const menu = document.getElementById('context-menu');
+            if (!menu) return;
+            menu.style.display = 'block';
 
-            // Selection check
-            document.querySelectorAll('.grid-item').forEach(x => x.classList.remove('selected'));
-            if (selectedItemForPractice === data) {
-                selectedItemForPractice = null;
-                document.getElementById('btn-delete').style.display = 'none';
-            } else {
-                selectedItemForPractice = data;
-                el.classList.add('selected');
-                document.getElementById('btn-delete').style.display = 'flex';
-            }
-            updateSelectedUI();
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const menuW = menu.offsetWidth;
+            const menuH = menu.offsetHeight;
+
+            let left = x;
+            let top = y;
+
+            if (x + menuW > winW) left = x - menuW;
+            if (top + menuH > winH) top = y - menuH;
+
+            menu.style.left = left + 'px';
+            menu.style.top = top + 'px';
         }
 
-        function updateSelectedUI() {
-            const bar = document.getElementById('explorer-action-bar');
-            const txt = document.getElementById('txt-selected-count');
-            
-            if (selectedItemForPractice) {
-                bar.classList.add('visible');
-                const count = selectedItemForPractice.items ? selectedItemForPractice.items.length : 1;
-                txt.innerText = `${count} Question${count > 1 ? 's' : ''} Selected`;
-            } else {
-                bar.classList.remove('visible');
+        window.handleBackgroundContextMenu = (e) => {
+            if (e.target.id === 'explorer-list' || e.target.classList.contains('explorer-content')) {
+                e.preventDefault();
+                if (pathStack.length === 0) return;
+                showContextMenu(e.clientX, e.clientY);
             }
-        }
-
-        window.goBackExplorer = () => {
-            if (pathStack.length > 1) {
-                pathStack.pop();
-                currentFolder = pathStack[pathStack.length - 1];
-                if (pathStack.length === 1) currentFolder = appData[pathStack[0]];
-                renderExplorer();
-            } else if (pathStack.length === 1) {
-                pathStack = [];
-                currentFolder = null;
-                renderExplorer();
-            } else goHome();
         };
 
-        function updateBreadcrumb() {
-            const container = document.getElementById('explorer-breadcrumb');
-            container.innerHTML = '';
-            if (pathStack.length === 0) return;
+        window.onclick = () => {
+            const menu = document.getElementById('context-menu');
+            if (menu) menu.style.display = 'none';
+        };
 
-            const root = appData[pathStack[0]];
-            const rootSpan = document.createElement('span');
-            rootSpan.innerText = root.name;
-            rootSpan.onclick = () => {
-                pathStack = [pathStack[0]];
-                currentFolder = root;
-                renderExplorer();
-            };
-            container.appendChild(rootSpan);
+        function findItemByLabel(label) {
+            const target = currentFolder || appData[pathStack[0]];
+            if (!target) return null;
+            return (target.folders || []).find(f => f.name === label) || (target.items || []).find(i => i.kanji === label);
+        }
 
-            pathStack.slice(1).forEach((f, idx) => {
-                container.innerHTML += ' / ';
-                const span = document.createElement('span');
-                span.innerText = f.name;
-                span.onclick = () => {
-                    pathStack = pathStack.slice(0, idx + 2);
-                    currentFolder = f;
-                    renderExplorer();
-                };
-                container.appendChild(span);
-            });
-            
-            if (currentFolder && currentFolder !== root) {
-                container.innerHTML += ' / ';
-                const active = document.createElement('span');
-                active.className = 'active';
-                active.innerText = currentFolder.name;
-                container.appendChild(active);
+        window.handleItemClick = (item, el) => {
+            if (isSelectMode) {
+                if (multiSelectItems.has(item)) {
+                    multiSelectItems.delete(item);
+                    el.classList.remove('selected');
+                } else {
+                    multiSelectItems.add(item);
+                    el.classList.add('selected');
+                }
+                selectedItemForPractice = multiSelectItems.size === 1 ? Array.from(multiSelectItems)[0] : null;
+            } else {
+                document.querySelectorAll('.grid-item').forEach(i => i.classList.remove('selected'));
+                if (selectedItemForPractice === item) {
+                    selectedItemForPractice = null;
+                } else {
+                    selectedItemForPractice = item;
+                    el.classList.add('selected');
+                }
+                multiSelectItems.clear();
+                if (selectedItemForPractice) multiSelectItems.add(selectedItemForPractice);
             }
+            updateSelectedUI();
+        };
+
+        window.toggleSelectMode = () => {
+            isSelectMode = !isSelectMode;
+            const btn = document.getElementById('btn-select-mode');
+            btn.style.background = isSelectMode ? 'var(--primary)' : '';
+            btn.style.color = isSelectMode ? 'white' : '';
+            if (!isSelectMode) {
+                // Keep current single selection if any
+            }
+        };
+
+        function updateSelectedUI() {
+            const count = multiSelectItems.size;
+            const bar = document.getElementById('explorer-action-bar');
+            const txtCount = document.getElementById('txt-selected-count');
+            const btnDel = document.getElementById('btn-delete');
+
+            if (count > 0) {
+                bar.classList.add('visible');
+                txtCount.innerText = `${count} Item${count > 1 ? 's' : ''} selected`;
+                btnDel.style.display = 'flex';
+            } else {
+                bar.classList.remove('visible');
+                btnDel.style.display = 'none';
+            }
+        }
+
+        function setupDragAndDrop() {
+            const items = document.querySelectorAll('.grid-item');
+            items.forEach(item => {
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        let dragTargetLabel = null;
+        function handleDragStart(e) {
+            dragTargetLabel = this.dataset.label;
+            this.style.opacity = '0.4';
+            e.dataTransfer.effectAllowed = 'move';
+        }
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            return false;
+        }
+        function handleDrop(e) {
+            e.stopPropagation();
+            if (dragTargetLabel !== this.dataset.label) {
+                const target = getTarget();
+                if (!target) return;
+                
+                const allItems = [...(target.folders || []), ...(target.items || [])];
+                const fromIdx = allItems.findIndex(i => (i.name || i.kanji) === dragTargetLabel);
+                const toIdx = allItems.findIndex(i => (i.name || i.kanji) === this.dataset.label);
+                
+                if (fromIdx !== -1 && toIdx !== -1) {
+                    const item = allItems.splice(fromIdx, 1)[0];
+                    allItems.splice(toIdx, 0, item);
+                    
+                    // Separate back to folders and items
+                    target.folders = allItems.filter(i => i.folders);
+                    target.items = allItems.filter(i => !i.folders);
+                    
+                    renderExplorer();
+                    saveData();
+                }
+            }
+            return false;
+        }
+        function handleDragEnd() {
+            this.style.opacity = '1';
         }
 
         // MODALS
@@ -967,6 +1376,7 @@
         window.closeModal = () => document.getElementById('modal-base').style.display = 'none';
 
         window.openFolderModal = () => {
+            if (pathStack.length === 0) return;
             openModal('New Folder', '<input type="text" id="modal-input" placeholder="Folder name">', 'Create', () => {
                 const val = document.getElementById('modal-input').value.trim();
                 if (!val) return;
@@ -977,7 +1387,27 @@
             });
         };
 
+        window.openRenameModal = () => {
+            if (multiSelectItems.size !== 1) {
+                alert("Select exactly one item to rename");
+                return;
+            }
+            const item = Array.from(multiSelectItems)[0];
+            const currentName = item.name || item.kanji;
+            
+            openModal('Rename', `<input type="text" id="modal-input" value="${currentName}">`, 'Rename', () => {
+                const val = document.getElementById('modal-input').value.trim();
+                if (!val || val === currentName) return;
+                
+                if (item.folders) item.name = val;
+                else item.kanji = val;
+                
+                renderExplorer(); saveData();
+            });
+        };
+
         window.addFile = () => {
+            if (pathStack.length === 0) return;
             openModal('Add Quizzes', '<textarea id="modal-text" placeholder="Type answers (one per line)"></textarea>', 'Add', () => {
                 const val = document.getElementById('modal-text').value.trim();
                 if (!val) return;
@@ -991,16 +1421,18 @@
         };
 
         window.deleteSelected = () => {
-            if (!selectedItemForPractice) return;
-            if (confirm("Delete this item?")) {
+            if (multiSelectItems.size === 0) return;
+            if (confirm(`Delete ${multiSelectItems.size} item(s)?`)) {
                 const target = getTarget();
-                if (selectedItemForPractice.items !== undefined) {
-                    target.folders = target.folders.filter(f => f !== selectedItemForPractice);
-                } else {
-                    target.items = target.items.filter(i => i !== selectedItemForPractice);
-                }
+                multiSelectItems.forEach(item => {
+                    if (item.folders) {
+                        target.folders = target.folders.filter(f => f !== item);
+                    } else {
+                        target.items = target.items.filter(i => i !== item);
+                    }
+                });
+                multiSelectItems.clear();
                 selectedItemForPractice = null;
-                document.getElementById('btn-delete').style.display = 'none';
                 renderExplorer(); saveData(); updateSelectedUI();
             }
         };
@@ -1048,21 +1480,22 @@
 
         // PRACTICE LOGIC
         window.startPracticeFromMenu = () => {
-            let target = selectedItemForPractice || currentFolder || appData[pathStack[0]];
-            if (!target) return;
-            
-            // Collect all items from folder or use single item
-            if (target.items) {
-                practiceList = [...target.items];
+            practiceList = [];
+            if (multiSelectItems.size > 0) {
+                multiSelectItems.forEach(target => {
+                    if (target.items) practiceList.push(...target.items);
+                    else practiceList.push(target);
+                });
             } else {
-                practiceList = [target];
+                let target = currentFolder || appData[pathStack[0]];
+                if (target && target.items) practiceList = [...target.items];
             }
-            
+
             if (practiceList.length === 0) { alert("No questions found"); return; }
-            
+
             // Shuffle
             practiceList.sort(() => Math.random() - 0.5);
-            
+
             practiceIndex = 0;
             mistakes = [];
             practiceStartTime = Date.now();
@@ -1070,6 +1503,20 @@
             startTimer();
             showQuestion();
         };
+
+        function showQuestion() {
+            const q = practiceList[practiceIndex];
+            if (!q) return;
+
+            document.getElementById('txt-progress-badge').innerText = `Question ${practiceIndex + 1} / ${practiceList.length}`;
+            document.getElementById('txt-question-number').innerText = q.kanji;
+
+            const input = document.getElementById('answer-input');
+            input.value = '';
+            input.focus();
+
+            document.getElementById('practice-feedback').innerHTML = '';
+        }
 
         function startTimer() {
             if (practiceTimer) clearInterval(practiceTimer);
@@ -1081,37 +1528,34 @@
             }, 1000);
         }
 
-        function showQuestion() {
-            const q = practiceList[practiceIndex];
-            document.getElementById('txt-progress-badge').innerText = `Question ${practiceIndex + 1} / ${practiceList.length}`;
-            document.getElementById('txt-question-number').innerText = `Question ${practiceIndex + 1}`;
-            document.getElementById('answer-input').value = '';
-            document.getElementById('answer-input').focus();
-            document.getElementById('practice-feedback').innerText = '';
-            document.getElementById('btn-submit-answer').style.background = 'var(--primary)';
-            document.getElementById('btn-submit-answer').innerText = 'Submit Answer';
-        }
-
         window.checkAnswer = () => {
-            const input = document.getElementById('answer-input').value.trim();
-            const correct = practiceList[practiceIndex].kanji;
+            if (isChecking) return;
+            const input = document.getElementById('answer-input');
             const feedback = document.getElementById('practice-feedback');
-            
-            if (input === correct) {
-                feedback.innerText = 'Correct!';
-                feedback.style.color = '#4ade80';
-                setTimeout(nextQuestion, 800);
+            const correctLabel = document.getElementById('correct-label');
+            const q = practiceList[practiceIndex];
+            if (!q) return;
+            const ans = input.value.trim();
+
+            if (ans === q.yomi || ans === q.kanji) {
+                isChecking = true;
+                feedback.innerHTML = '<span style="color:#4ade80">Correct!</span>';
+                correctLabel.style.animation = 'popIn 0.8s ease-out forwards';
+
+                setTimeout(() => {
+                    correctLabel.style.animation = 'none';
+                    isChecking = false;
+                    nextQuestion();
+                }, 800);
             } else {
-                feedback.innerText = `Wrong! Correct was "${correct}"`;
-                feedback.style.color = '#f87171';
-                mistakes.push(practiceList[practiceIndex]);
-                document.getElementById('btn-submit-answer').innerText = 'Next Question';
-                document.getElementById('btn-submit-answer').onclick = nextQuestion;
+                input.style.borderBottomColor = '#f87171';
+                feedback.innerHTML = '<span style="color:#f87171">Keep trying...</span>';
+                if (!mistakes.includes(q)) mistakes.push(q);
+                setTimeout(() => { input.style.borderBottomColor = ''; }, 1000);
             }
         };
 
         function nextQuestion() {
-            document.getElementById('btn-submit-answer').onclick = window.checkAnswer;
             practiceIndex++;
             if (practiceIndex < practiceList.length) {
                 showQuestion();
@@ -1123,15 +1567,15 @@
         function finishPractice() {
             clearInterval(practiceTimer);
             changeScreen('result');
-            
+
             const diff = Math.floor((Date.now() - practiceStartTime) / 1000);
             const m = String(Math.floor(diff / 60)).padStart(2, '0');
             const s = String(diff % 60).padStart(2, '0');
             document.getElementById('res-time').innerText = `${m}:${s}`;
-            
+
             const rate = Math.round(((practiceList.length - mistakes.length) / practiceList.length) * 100);
             document.getElementById('res-rate').innerText = `${rate}%`;
-            
+
             const review = document.getElementById('review-section');
             const list = document.getElementById('review-list');
             if (mistakes.length > 0) {
@@ -1154,9 +1598,9 @@
             const ctx = canvas.getContext('2d');
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
-            
+
             confettiParticles = [];
-            for(let i=0; i<150; i++) {
+            for (let i = 0; i < 150; i++) {
                 confettiParticles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height - canvas.height,
@@ -1168,26 +1612,26 @@
                     rotVel: Math.random() * 10 - 5
                 });
             }
-            
+
             function update() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 confettiParticles.forEach(p => {
                     p.x += p.velX;
                     p.y += p.velY;
                     p.rot += p.rotVel;
-                    if(p.y > canvas.height) p.y = -20;
-                    
+                    if (p.y > canvas.height) p.y = -20;
+
                     ctx.save();
                     ctx.translate(p.x, p.y);
                     ctx.rotate(p.rot * Math.PI / 180);
                     ctx.fillStyle = p.color;
-                    ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
                     ctx.restore();
                 });
                 confettiAnimationId = requestAnimationFrame(update);
             }
             update();
-            setTimeout(() => { if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); ctx.clearRect(0,0,canvas.width,canvas.height); }, 5000);
+            setTimeout(() => { if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); ctx.clearRect(0, 0, canvas.width, canvas.height); }, 5000);
         }
 
         window.retryMistakes = () => {
@@ -1201,17 +1645,87 @@
             showQuestion();
         };
 
+        function setupDragSelection() {
+            const container = document.getElementById('explorer-list');
+            const marquee = document.getElementById('marquee');
+            let startX, startY;
+
+            container.onmousedown = (e) => {
+                if (e.target !== container && e.target.id !== 'marquee') return;
+                e.preventDefault();
+
+                const rect = container.getBoundingClientRect();
+                startX = e.clientX - rect.left + container.scrollLeft;
+                startY = e.clientY - rect.top + container.scrollTop;
+
+                marquee.style.left = startX + 'px';
+                marquee.style.top = startY + 'px';
+                marquee.style.width = '0px';
+                marquee.style.height = '0px';
+                marquee.style.display = 'block';
+
+                const onMouseMove = (me) => {
+                    const currentX = me.clientX - rect.left + container.scrollLeft;
+                    const currentY = me.clientY - rect.top + container.scrollTop;
+                    const x = Math.min(startX, currentX);
+                    const y = Math.min(startY, currentY);
+                    const w = Math.abs(startX - currentX);
+                    const h = Math.abs(startY - currentY);
+
+                    marquee.style.left = x + 'px';
+                    marquee.style.top = y + 'px';
+                    marquee.style.width = w + 'px';
+                    marquee.style.height = h + 'px';
+
+                    // Hit testing
+                    const marqueeRect = { left: x, top: y, right: x + w, bottom: y + h };
+                    const items = document.querySelectorAll('.grid-item');
+                    items.forEach(el => {
+                        const itemRect = {
+                            left: el.offsetLeft,
+                            top: el.offsetTop,
+                            right: el.offsetLeft + el.offsetWidth,
+                            bottom: el.offsetTop + el.offsetHeight
+                        };
+
+                        const isInside = !(itemRect.left > marqueeRect.right ||
+                            itemRect.right < marqueeRect.left ||
+                            itemRect.top > marqueeRect.bottom ||
+                            itemRect.bottom < marqueeRect.top);
+
+                        const label = el.querySelector('.item-label').innerText;
+                        const itemObj = findItemByLabel(label);
+
+                        if (isInside) {
+                            if (!multiSelectItems.has(itemObj)) {
+                                multiSelectItems.add(itemObj);
+                                el.classList.add('selected');
+                            }
+                        } else if (!isSelectMode) {
+                            // If not in permanent select mode, deselect items outside box
+                            multiSelectItems.delete(itemObj);
+                            el.classList.remove('selected');
+                        }
+                    });
+                    updateSelectedUI();
+                };
+
+                const onMouseUp = () => {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    marquee.style.display = 'none';
+                };
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            };
+        }
+
         // Utility: Enter key support
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                const active = document.querySelector('.screen.active');
-                if (active.id === 'screen-practice') {
-                    const btn = document.getElementById('btn-submit-answer');
-                    if (btn) btn.click();
-                }
-            }
         });
 
     </script>
 </body>
+
 </html>
