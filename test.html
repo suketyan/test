@@ -515,41 +515,16 @@
             text-transform: uppercase;
         }
 
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
         .answer-input-wrapper {
             width: 100%;
             position: relative;
-        }
-
-        .correct-overlay {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            color: #4ade80;
-            font-weight: 800;
-            z-index: 5;
-            pointer-events: none;
-            opacity: 0;
-            transform: scale(0.5);
-        }
-
-        @keyframes popIn {
-            0% {
-                opacity: 0;
-                transform: scale(0.5);
-            }
-
-            50% {
-                opacity: 1;
-                transform: scale(1.2);
-            }
-
-            100% {
-                opacity: 0;
-                transform: scale(1);
-            }
         }
 
         #answer-input {
@@ -796,7 +771,7 @@
                 </div>
 
                 <!-- サブツールバー -->
-                <div class="explorer-header-bar" style="padding: 10px 20px; gap: 8px; justify-content: flex-end;">
+                <div class="explorer-header-bar" style="padding: 10px 20px; gap: 8px; justify-content: flex-start;">
                     <button class="floating-btn" id="btn-select-mode" style="width:36px; height:36px; font-size:16px;"
                         onclick="toggleSelectMode()" title="Select Mode"><i class='bx bx-select-multiple'></i></button>
                     <button class="floating-btn" style="width:36px; height:36px; font-size:16px;"
@@ -842,7 +817,6 @@
                 </div>
 
                 <div class="answer-input-wrapper">
-                    <div class="correct-overlay" id="correct-label">正解</div>
                     <input type="text" id="answer-input" placeholder="Type answer..." autocomplete="off">
                 </div>
 
@@ -1122,7 +1096,12 @@
             if (pathStack.length === 0) {
                 target.folders.forEach(key => {
                     const item = appData[key];
-                    list.appendChild(createGridItem(item.name, key === 'google' ? 'google' : 'storage', () => { pathStack.push(key); renderExplorer(); }));
+                    // Enable selection tracking for storage items as well
+                    list.appendChild(createGridItem(item.name, key === 'google' ? 'google' : 'storage', (el) => handleItemClick(item, el), () => { 
+                        pathStack.push(key); 
+                        multiSelectItems.clear();
+                        renderExplorer(); 
+                    }));
                 });
             } else {
                 const folders = target.folders || [];
@@ -1136,14 +1115,19 @@
                 });
             }
             updateSelectedUI();
+            setupDragSelection();
             setupDragAndDrop();
         };
 
         function updateActionButtons() {
             const isRoot = pathStack.length === 0;
-            const btns = document.querySelectorAll('.explorer-header-bar .floating-btn:not(#btn-explorer-back):not(#btn-select-mode)');
+            const btns = document.querySelectorAll('.explorer-header-bar .floating-btn');
             btns.forEach(btn => {
-                if (isRoot) {
+                const isBack = btn.id === 'btn-explorer-back';
+                const isSelect = btn.id === 'btn-select-mode';
+                const isExport = btn.getAttribute('onclick')?.includes('exportJson');
+
+                if (isRoot && !isBack && !isSelect && !isExport) {
                     btn.style.opacity = '0.3';
                     btn.style.pointerEvents = 'none';
                     btn.title = "Actions restricted in root";
@@ -1158,7 +1142,7 @@
         window.updateBreadcrumb = () => {
             const breadcrumb = document.getElementById('explorer-breadcrumb');
             breadcrumb.innerHTML = '';
-            
+
             const rootSpan = document.createElement('span');
             rootSpan.innerHTML = `<i class='bx bx-hdd'></i> Storage Root`;
             rootSpan.onclick = () => { pathStack = []; currentFolder = null; renderExplorer(); };
@@ -1170,14 +1154,21 @@
                 const span = document.createElement('span');
                 const label = idx === 0 ? appData[p].name : p;
                 span.innerText = label;
-                span.onclick = () => {
-                    pathStack = pathStack.slice(0, idx + 1);
-                    currentFolder = idx === 0 ? null : findFolder(pathStack);
-                    multiSelectItems.clear();
-                    selectedItemForPractice = null;
-                    renderExplorer();
-                };
-                if (idx === pathStack.length - 1) span.classList.add('active');
+                
+                const isCurrent = idx === pathStack.length - 1;
+                if (!isCurrent) {
+                    span.onclick = () => {
+                        pathStack = pathStack.slice(0, idx + 1);
+                        currentFolder = idx === 0 ? null : findFolder(pathStack);
+                        multiSelectItems.clear();
+                        selectedItemForPractice = null;
+                        renderExplorer();
+                    };
+                    span.style.cursor = 'pointer';
+                } else {
+                    span.classList.add('active');
+                    span.style.cursor = 'default';
+                }
                 breadcrumb.appendChild(span);
             });
         };
@@ -1339,19 +1330,19 @@
             if (dragTargetLabel !== this.dataset.label) {
                 const target = getTarget();
                 if (!target) return;
-                
+
                 const allItems = [...(target.folders || []), ...(target.items || [])];
                 const fromIdx = allItems.findIndex(i => (i.name || i.kanji) === dragTargetLabel);
                 const toIdx = allItems.findIndex(i => (i.name || i.kanji) === this.dataset.label);
-                
+
                 if (fromIdx !== -1 && toIdx !== -1) {
                     const item = allItems.splice(fromIdx, 1)[0];
                     allItems.splice(toIdx, 0, item);
-                    
+
                     // Separate back to folders and items
                     target.folders = allItems.filter(i => i.folders);
                     target.items = allItems.filter(i => !i.folders);
-                    
+
                     renderExplorer();
                     saveData();
                 }
@@ -1394,14 +1385,14 @@
             }
             const item = Array.from(multiSelectItems)[0];
             const currentName = item.name || item.kanji;
-            
+
             openModal('Rename', `<input type="text" id="modal-input" value="${currentName}">`, 'Rename', () => {
                 const val = document.getElementById('modal-input').value.trim();
                 if (!val || val === currentName) return;
-                
+
                 if (item.folders) item.name = val;
                 else item.kanji = val;
-                
+
                 renderExplorer(); saveData();
             });
         };
@@ -1532,21 +1523,23 @@
             if (isChecking) return;
             const input = document.getElementById('answer-input');
             const feedback = document.getElementById('practice-feedback');
-            const correctLabel = document.getElementById('correct-label');
             const q = practiceList[practiceIndex];
             if (!q) return;
             const ans = input.value.trim();
 
             if (ans === q.yomi || ans === q.kanji) {
                 isChecking = true;
-                feedback.innerHTML = '<span style="color:#4ade80">Correct!</span>';
-                correctLabel.style.animation = 'popIn 0.8s ease-out forwards';
+                fireCherryBlossoms();
+                
+                // Dim input and feedback to emphasize animation
+                input.style.opacity = '0.5';
+                feedback.innerHTML = '<span style="color:#f472b6; font-size:1.2rem; filter:drop-shadow(0 0 8px rgba(244,114,182,0.4))">Perfect!</span>';
 
                 setTimeout(() => {
-                    correctLabel.style.animation = 'none';
+                    input.style.opacity = '1';
                     isChecking = false;
                     nextQuestion();
-                }, 800);
+                }, 850);
             } else {
                 input.style.borderBottomColor = '#f87171';
                 feedback.innerHTML = '<span style="color:#f87171">Keep trying...</span>';
@@ -1592,7 +1585,65 @@
             }
         }
 
-        // CONFETTI LOGIC
+        // CONFETTI & CHERRY BLOSSOMS
+        function fireCherryBlossoms() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Pink/White colors for cherry blossoms
+            const colors = ['#f472b6', '#fbcfe8', '#fdf2f8', '#f9a8d4'];
+            
+            for (let i = 0; i < 40; i++) {
+                confettiParticles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height * 0.4,
+                    size: Math.random() * 8 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    velX: (Math.random() - 0.5) * 12,
+                    velY: Math.random() * -15 - 5,
+                    rot: Math.random() * 360,
+                    rotVel: Math.random() * 10 - 5,
+                    gravity: 0.4
+                });
+            }
+            if (!confettiAnimationId) animatePetals();
+        }
+
+        function animatePetals() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            confettiParticles.forEach((p, idx) => {
+                p.velY += p.gravity;
+                p.x += p.velX;
+                p.y += p.velY;
+                p.rot += p.rotVel;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot * Math.PI / 180);
+                ctx.fillStyle = p.color;
+                
+                // Draw petal shape (oval-ish)
+                ctx.beginPath();
+                ctx.ellipse(0, 0, p.size, p.size / 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (p.y > canvas.height + 20) confettiParticles.splice(idx, 1);
+            });
+
+            if (confettiParticles.length > 0) {
+                confettiAnimationId = requestAnimationFrame(animatePetals);
+            } else {
+                confettiAnimationId = null;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
         function startConfetti() {
             const canvas = document.getElementById('confetti-canvas');
             const ctx = canvas.getContext('2d');
@@ -1609,13 +1660,14 @@
                     velX: Math.random() * 3 - 1.5,
                     velY: Math.random() * 5 + 3,
                     rot: Math.random() * 360,
-                    rotVel: Math.random() * 10 - 5
+                    rotVel: Math.random() * 10 - 5,
+                    gravity: 0 // traditional confetti doesn't need extra gravity here
                 });
             }
 
             function update() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                confettiParticles.forEach(p => {
+                confettiParticles.forEach((p, idx) => {
                     p.x += p.velX;
                     p.y += p.velY;
                     p.rot += p.rotVel;
@@ -1631,7 +1683,7 @@
                 confettiAnimationId = requestAnimationFrame(update);
             }
             update();
-            setTimeout(() => { if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); ctx.clearRect(0, 0, canvas.width, canvas.height); }, 5000);
+            setTimeout(() => { if (confettiAnimationId) cancelAnimationFrame(confettiAnimationId); ctx.clearRect(0, 0, canvas.width, canvas.height); confettiParticles = []; }, 5000);
         }
 
         window.retryMistakes = () => {
@@ -1651,6 +1703,16 @@
             let startX, startY;
 
             container.onmousedown = (e) => {
+                if (e.button !== 0) return; // Only left click
+                
+                // Deselect if clicking on empty list space
+                if (e.target === container) {
+                    multiSelectItems.clear();
+                    selectedItemForPractice = null;
+                    updateSelectedUI();
+                    document.querySelectorAll('.grid-item').forEach(el => el.classList.remove('selected'));
+                }
+
                 if (e.target !== container && e.target.id !== 'marquee') return;
                 e.preventDefault();
 
@@ -1721,11 +1783,20 @@
             };
         }
 
-        // Utility: Enter key support
+        // Initial call
+        setupDragSelection();
+
+        // Keyboard Support
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const activeScreen = screens.find(s => document.getElementById(`screen-${s}`).classList.contains('active'));
+                if (activeScreen === 'practice' && document.getElementById('answer-input') === document.activeElement) {
+                    checkAnswer();
+                }
+            }
         });
-
     </script>
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
 </body>
-
 </html>
