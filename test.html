@@ -661,9 +661,9 @@
 
     <!-- コンテキストメニュー -->
     <div class="context-menu glass-card" id="context-menu" style="display:none;">
-        <div class="context-item" onclick="startPracticeFromMenu()"><i class='bx bx-play-circle'></i> 練習を開始</div>
-        <div class="context-item" onclick="openRenameModal()"><i class='bx bx-edit-alt'></i> 名前を変更</div>
-        <div class="context-item" style="color:#f87171;" onclick="deleteSelected()"><i class='bx bx-trash'></i> 削除</div>
+        <div class="context-item" id="ctx-practice" onclick="startPracticeFromMenu()"><i class='bx bx-play-circle'></i> 練習を開始</div>
+        <div class="context-item" id="ctx-rename" onclick="openRenameModal()"><i class='bx bx-edit-alt'></i> 名前を変更</div>
+        <div class="context-item" id="ctx-delete" style="color:#f87171;" onclick="deleteSelected()"><i class='bx bx-trash'></i> 削除</div>
     </div>
 
     <div class="loader-overlay" id="loader">
@@ -1150,11 +1150,18 @@
             breadcrumb.appendChild(rootSpan);
 
             pathStack.forEach((p, idx) => {
-                breadcrumb.innerHTML += ' <i class="bx bx-chevron-right" style="opacity:0.3"></i> ';
+                // Use createElement for separator to avoid innerHTML+= destroying onclick listeners
+                const sep = document.createElement('i');
+                sep.className = 'bx bx-chevron-right';
+                sep.style.opacity = '0.3';
+                breadcrumb.appendChild(document.createTextNode(' '));
+                breadcrumb.appendChild(sep);
+                breadcrumb.appendChild(document.createTextNode(' '));
+
                 const span = document.createElement('span');
                 const label = idx === 0 ? appData[p].name : p;
                 span.innerText = label;
-                
+
                 const isCurrent = idx === pathStack.length - 1;
                 if (!isCurrent) {
                     span.onclick = () => {
@@ -1197,14 +1204,9 @@
                 const itemObj = findItemByLabel(label);
                 if (itemObj) {
                     if (pathStack.length === 0) return; // Disable menu in Storage Root
-                    if (!multiSelectItems.has(itemObj)) {
-                        // Don't select on right click unless not selected? 
-                        // Actually the user said "Left click only for selection".
-                        // So we just show the menu for the current item if it's already selected, 
-                        // or we can select it temporarily for the menu?
-                        // Let's stick to "Just show menu if it's already selected, otherwise do nothing or show menu for it anyway".
-                    }
-                    showContextMenu(e.clientX, e.clientY);
+                    // User requested: If not selected, hide delete/practice buttons
+                    const isSelected = multiSelectItems.has(itemObj) || selectedItemForPractice === itemObj;
+                    showContextMenu(e.clientX, e.clientY, isSelected);
                 }
             };
 
@@ -1216,9 +1218,20 @@
             return div;
         }
 
-        function showContextMenu(x, y) {
+        function showContextMenu(x, y, isItemTargeted) {
             const menu = document.getElementById('context-menu');
             if (!menu) return;
+
+            // Toggle item-specific buttons
+            const practice = document.getElementById('ctx-practice');
+            const rename = document.getElementById('ctx-rename');
+            const del = document.getElementById('ctx-delete');
+            
+            const display = isItemTargeted ? 'flex' : 'none';
+            if (practice) practice.style.display = display;
+            if (rename) rename.style.display = display;
+            if (del) del.style.display = display;
+
             menu.style.display = 'block';
 
             const winW = window.innerWidth;
@@ -1240,7 +1253,16 @@
             if (e.target.id === 'explorer-list' || e.target.classList.contains('explorer-content')) {
                 e.preventDefault();
                 if (pathStack.length === 0) return;
-                showContextMenu(e.clientX, e.clientY);
+                
+                // User requested: If selected, clear selection and hide item buttons
+                if (multiSelectItems.size > 0 || selectedItemForPractice) {
+                    multiSelectItems.clear();
+                    selectedItemForPractice = null;
+                    document.querySelectorAll('.grid-item').forEach(el => el.classList.remove('selected'));
+                    updateSelectedUI();
+                }
+                
+                showContextMenu(e.clientX, e.clientY, false);
             }
         };
 
@@ -1250,6 +1272,10 @@
         };
 
         function findItemByLabel(label) {
+            // At root level, storage items are appData entries themselves
+            if (pathStack.length === 0) {
+                return Object.values(appData).find(v => v.name === label) || null;
+            }
             const target = currentFolder || appData[pathStack[0]];
             if (!target) return null;
             return (target.folders || []).find(f => f.name === label) || (target.items || []).find(i => i.kanji === label);
@@ -1294,6 +1320,8 @@
             const bar = document.getElementById('explorer-action-bar');
             const txtCount = document.getElementById('txt-selected-count');
             const btnDel = document.getElementById('btn-delete');
+            // Find the Export button
+            const btnExport = document.querySelector('.explorer-header-bar .floating-btn[onclick*="exportJson"]');
 
             if (count > 0) {
                 bar.classList.add('visible');
@@ -1302,6 +1330,19 @@
             } else {
                 bar.classList.remove('visible');
                 btnDel.style.display = 'none';
+            }
+
+            // Disable Export button when multiple items are selected
+            if (btnExport) {
+                if (count > 1) {
+                    btnExport.style.opacity = '0.3';
+                    btnExport.style.pointerEvents = 'none';
+                    btnExport.title = 'Cannot export multiple items at once';
+                } else {
+                    btnExport.style.opacity = '';
+                    btnExport.style.pointerEvents = '';
+                    btnExport.title = 'Export';
+                }
             }
         }
 
@@ -1455,12 +1496,31 @@
         };
 
         window.exportJson = () => {
-            const target = selectedItemForPractice || currentFolder || appData[pathStack[0]];
+            // When multiple items selected, export is disabled
+            if (multiSelectItems.size > 1) {
+                alert('Export is only available for a single item. Please select just one.');
+                return;
+            }
+
+            let target;
+            if (selectedItemForPractice) {
+                target = selectedItemForPractice;
+            } else if (pathStack.length === 0) {
+                // At root level — nothing meaningful to export without selection
+                alert('Please select an item to export.');
+                return;
+            } else {
+                target = currentFolder || appData[pathStack[0]];
+            }
+
+            if (!target) { alert('Nothing to export'); return; }
+
+            const filename = target.name || target.kanji || 'export';
             const blob = new Blob([JSON.stringify(target, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = (target.name || 'export') + '.json';
+            a.download = filename + '.json';
             a.click();
             URL.revokeObjectURL(url);
         };
@@ -1757,6 +1817,7 @@
 
                         const label = el.querySelector('.item-label').innerText;
                         const itemObj = findItemByLabel(label);
+                        if (!itemObj) return; // Skip if item couldn't be resolved
 
                         if (isInside) {
                             if (!multiSelectItems.has(itemObj)) {
