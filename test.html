@@ -388,11 +388,11 @@
         .explorer-content {
             flex: 1;
             overflow-y: auto;
-            padding: 16px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-            gap: 12px;
-            align-content: flex-start;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-content: stretch;
             position: relative;
         }
 
@@ -406,30 +406,32 @@
         }
 
         .grid-item {
-            padding: 16px;
+            padding: 12px 16px;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
-            text-align: center;
-            gap: 8px;
+            text-align: left;
+            gap: 16px;
             cursor: pointer;
             transition: var(--transition);
-            border: 2px solid transparent;
-            border-radius: 16px;
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            position: relative;
         }
 
         .grid-item:hover {
             background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-2px);
         }
 
         .grid-item.selected {
-            background: rgba(99, 102, 241, 0.15);
-            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(99, 102, 241, 0.4);
         }
 
         .grid-item i {
-            font-size: 40px;
+            font-size: 24px;
+            flex-shrink: 0;
         }
 
         .grid-item .folder-icon {
@@ -444,22 +446,63 @@
             color: var(--accent);
         }
 
+        /* Folder/File Distinction */
+        .grid-item[data-type="folder"] {
+            border-left: 3px solid #facc15;
+            background: rgba(250, 204, 21, 0.05);
+        }
+
+        .grid-item[data-type="file"] {
+            border-left: 3px solid var(--primary-light);
+        }
+
         .grid-item .google-icon {
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0;
         }
 
         .grid-item .google-icon svg {
-            width: 32px;
-            height: 32px;
+            width: 24px;
+            height: 24px;
         }
 
         .item-label {
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 500;
-            word-break: break-all;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .drag-handle {
+            color: var(--text-dim);
+            font-size: 20px !important;
+            cursor: grab;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .grid-item:hover .drag-handle {
+            opacity: 1;
+        }
+
+        .grid-item.dragging {
+            opacity: 0.5;
+            border: 2px dashed var(--primary);
+            background: var(--bg-glass);
+        }
+
+        /* Drop indicator */
+        .drop-indicator {
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px;
+            margin: 4px 0;
+            display: none;
         }
 
         /* フッターツール */
@@ -1193,6 +1236,7 @@
             div.className = 'grid-item glass-card';
             div.setAttribute('draggable', 'true');
             div.dataset.label = label;
+            div.dataset.type = type; // For styling
 
             let iconHtml = '';
             if (type === 'google') {
@@ -1201,7 +1245,9 @@
                 iconHtml = `<i class='bx ${type === 'folder' ? 'bxs-folder folder-icon' : type === 'storage' ? 'bx-hdd storage-icon' : 'bx-file file-icon'}'></i>`;
             }
 
-            div.innerHTML = `${iconHtml}<div class="item-label">${label}</div>`;
+            const handleHtml = (type === 'folder' || type === 'file') ? `<i class='bx bx-dots-vertical-rounded drag-handle'></i>` : '';
+
+            div.innerHTML = `${iconHtml}<div class="item-label">${label}</div>${handleHtml}`;
             div.onclick = (e) => { e.stopPropagation(); onclick(div); };
             if (ondoubleclick) div.ondblclick = (e) => { e.stopPropagation(); ondoubleclick(); };
 
@@ -1355,51 +1401,99 @@
         }
 
         function setupDragAndDrop() {
+            const container = document.getElementById('explorer-list');
+            let draggedElement = null;
+            let indicator = document.createElement('div');
+            indicator.className = 'drop-indicator';
+            container.appendChild(indicator);
+
             const items = document.querySelectorAll('.grid-item');
+            
             items.forEach(item => {
-                item.addEventListener('dragstart', handleDragStart);
-                item.addEventListener('dragover', handleDragOver);
-                item.addEventListener('drop', handleDrop);
-                item.addEventListener('dragend', handleDragEnd);
-            });
-        }
-
-        let dragTargetLabel = null;
-        function handleDragStart(e) {
-            dragTargetLabel = this.dataset.label;
-            this.style.opacity = '0.4';
-            e.dataTransfer.effectAllowed = 'move';
-        }
-        function handleDragOver(e) {
-            if (e.preventDefault) e.preventDefault();
-            return false;
-        }
-        function handleDrop(e) {
-            e.stopPropagation();
-            if (dragTargetLabel !== this.dataset.label) {
-                const target = getTarget();
-                if (!target) return;
-
-                const allItems = [...(target.folders || []), ...(target.items || [])];
-                const fromIdx = allItems.findIndex(i => (i.name || i.kanji) === dragTargetLabel);
-                const toIdx = allItems.findIndex(i => (i.name || i.kanji) === this.dataset.label);
-
-                if (fromIdx !== -1 && toIdx !== -1) {
-                    const item = allItems.splice(fromIdx, 1)[0];
-                    allItems.splice(toIdx, 0, item);
-
-                    // Separate back to folders and items
-                    target.folders = allItems.filter(i => i.folders);
-                    target.items = allItems.filter(i => !i.folders);
-
-                    renderExplorer();
-                    saveData();
+                const type = item.dataset.type;
+                if (type !== 'folder' && type !== 'file') {
+                    item.setAttribute('draggable', 'false');
+                    return;
                 }
+
+                item.addEventListener('dragstart', (e) => {
+                    draggedElement = item;
+                    item.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                item.addEventListener('dragend', () => {
+                    draggedElement = null;
+                    item.classList.remove('dragging');
+                    indicator.style.display = 'none';
+                    document.querySelectorAll('.grid-item').forEach(el => el.style.marginTop = '');
+                });
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!draggedElement) return;
+
+                const target = getDragTarget(e.clientY);
+                if (target) {
+                    indicator.style.display = 'block';
+                    container.insertBefore(indicator, target);
+                } else {
+                    indicator.style.display = 'block';
+                    container.appendChild(indicator);
+                }
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (!draggedElement) return;
+
+                const fromLabel = draggedElement.dataset.label;
+                const target = getDragTarget(e.clientY);
+                const toLabel = target ? target.dataset.label : null;
+
+                if (fromLabel !== toLabel) {
+                    reorderData(fromLabel, toLabel);
+                }
+
+                indicator.style.display = 'none';
+                renderExplorer();
+            });
+
+            function getDragTarget(y) {
+                const items = [...container.querySelectorAll('.grid-item:not(.dragging)')];
+                return items.find(item => {
+                    const rect = item.getBoundingClientRect();
+                    return y < rect.top + rect.height / 2;
+                });
             }
-            return false;
         }
-        function handleDragEnd() {
-            this.style.opacity = '1';
+
+        function reorderData(fromLabel, toLabel) {
+            const parent = getTarget();
+            if (!parent) return;
+
+            const allItems = [...(parent.folders || []), ...(parent.items || [])];
+            const fromIdx = allItems.findIndex(i => (i.name || i.kanji) === fromLabel);
+            
+            if (fromIdx === -1) return;
+            const item = allItems.splice(fromIdx, 1)[0];
+
+            if (toLabel) {
+                const toIdx = allItems.findIndex(i => (i.name || i.kanji) === toLabel);
+                if (toIdx !== -1) {
+                    allItems.splice(toIdx, 0, item);
+                } else {
+                    allItems.push(item);
+                }
+            } else {
+                allItems.push(item);
+            }
+
+            parent.folders = allItems.filter(i => i.folders !== undefined);
+            parent.items = allItems.filter(i => i.folders === undefined);
+            
+            saveData();
         }
 
         // MODALS
