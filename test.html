@@ -274,7 +274,7 @@
             border: 1px solid var(--border-glass);
             border-radius: 12px;
             padding: 8px 0;
-            z-index: 2000;
+            z-index: 1500;
             display: none;
             box-shadow: var(--shadow-premium);
             min-width: 160px;
@@ -694,7 +694,7 @@
             inset: 0;
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
-            z-index: 1000;
+            z-index: 2000;
             display: none;
             justify-content: center;
             align-items: center;
@@ -1386,6 +1386,11 @@
             menu.style.top = top + 'px';
         }
 
+        function hideContextMenu() {
+            const menu = document.getElementById('context-menu');
+            if (menu) menu.style.display = 'none';
+        }
+
         window.toggleSubMenu = (e) => {
             e.stopPropagation();
             const submenu = document.getElementById('context-submenu');
@@ -1427,8 +1432,7 @@
         };
 
         window.onclick = () => {
-            const menu = document.getElementById('context-menu');
-            if (menu) menu.style.display = 'none';
+            hideContextMenu();
         };
 
         function findItemByLabel(label) {
@@ -1480,19 +1484,14 @@
             const bar = document.getElementById('explorer-action-bar');
             const txtCount = document.getElementById('txt-selected-count');
             const btnDel = document.getElementById('btn-delete');
-            const btnNewRow = document.getElementById('action-bar-new-btns');
-            // Find the Export button in the sub-toolbar
             const btnExportHeader = document.querySelector('.explorer-header-bar .floating-btn[onclick*="exportJson"]');
-
             if (count > 0) {
                 bar.classList.add('visible');
                 txtCount.innerText = `${count} Item${count > 1 ? 's' : ''} selected`;
                 btnDel.style.display = 'flex';
-                btnNewRow.style.display = 'flex';
             } else {
                 bar.classList.remove('visible');
                 btnDel.style.display = 'none';
-                btnNewRow.style.display = 'none';
             }
 
             // Disable sub-toolbar Export button when multiple items are selected
@@ -1673,6 +1672,7 @@
 
         // MODALS
         window.openModal = (title, bodyHtml, confirmText, confirmAction) => {
+            hideContextMenu();
             const overlay = document.getElementById('modal-base');
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-body').innerHTML = bodyHtml;
@@ -1732,6 +1732,7 @@
         };
 
         window.deleteSelected = () => {
+            hideContextMenu();
             if (multiSelectItems.size === 0) return;
             if (confirm(`Delete ${multiSelectItems.size} item(s)?`)) {
                 const target = getTarget();
@@ -1749,6 +1750,7 @@
         };
 
         window.importJson = () => {
+            hideContextMenu();
             const input = document.getElementById('json-file-input');
             input.onchange = (e) => {
                 const file = e.target.files[0];
@@ -1775,6 +1777,7 @@
         };
 
         window.exportJson = () => {
+            hideContextMenu();
             // When multiple items selected, export is disabled
             if (multiSelectItems.size > 1) {
                 alert('Export is only available for a single item. Please select just one.');
@@ -1810,6 +1813,7 @@
 
         // PRACTICE LOGIC
         window.startPracticeFromMenu = () => {
+            hideContextMenu();
             practiceList = [];
             const targetParent = getTarget();
 
