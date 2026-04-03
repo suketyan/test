@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+        content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover">
+    <title>社会問題集 Premium</title>
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-light: #818cf8;
+            --secondary: #a855f7;
+            --accent: #22d3ee;
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.05);
+            --border-glass: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --shadow-premium: 0 20px 50px rgba(0, 0, 0, 0.3);
+            --transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        [data-theme="light"] {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --secondary: #9333ea;
+            --accent: #06b6d4;
+            --bg-dark: #f1f5f9;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --bg-glass: rgba(0, 0, 0, 0.05);
+            --border-glass: rgba(0, 0, 0, 0.1);
+            --text-main: #1e293b;
+            --text-dim: #64748b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            overflow: hidden;
+            height: 100vh;
+            height: 100dvh;
+            width: 100vw;
+            line-height: 1.5;
+        }
+
+        /* 背景グラデーション */
+        .bg-blobs {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            filter: blur(80px);
+            opacity: 0.5;
+        }
+
+        .blob {
+            position: absolute;
+            width: 40vw;
+            height: 40vw;
+            border-radius: 50%;
+            background: var(--primary);
+            animation: drift 20s infinite alternate;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            background: var(--primary);
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            right: -10%;
+            background: var(--secondary);
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            top: 40%;
+            left: 50%;
+            background: var(--accent);
+            animation-delay: -10s;
+        }
+
+        @keyframes drift {
+            from {
+                transform: translate(0, 0) scale(1);
+            }
+
+            to {
+                transform: translate(10%, 10%) scale(1.2);
+            }
+        }
+
+        /* 共通レイアウト */
+        .app-container {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .screen {
+            position: absolute;
+            inset: 0;
+            display: none;
+            flex-direction: column;
+            padding: 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: var(--transition);
+        }
+
+        @media (max-width: 600px) {
+            .screen {
+                padding: 16px;
+            }
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* グラスモルフィズムコンポーネント */
+        .glass-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            box-shadow: var(--shadow-premium);
+        }
+
+        /* ホーム画面 */
+        #screen-home {
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+        }
+
+        .main-hero {
+            text-align: center;
+        }
+
+        .main-hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, var(--text-main) 30%, var(--primary-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+
+        .main-hero p {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+        }
+
+        .nav-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .nav-card {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .nav-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-card i {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-card h3 {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .nav-card p {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        /* ツールバー */
+        .top-toolbar {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            right: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .floating-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            cursor: pointer;
+            transition: var(--transition);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] .floating-btn {
+            background: rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary);
+            color: white !important;
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* コンテキストメニュー */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 8px 0;
+            z-index: 1500;
+            display: none;
+            box-shadow: var(--shadow-premium);
+            min-width: 160px;
+        }
+
+        .context-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 0.9rem;
+            transition: background 0.2s;
+        }
+
+        .context-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-submenu {
+            position: absolute;
+            left: calc(100% + 5px);
+            top: 0;
+            background: var(--bg-card);
+            backdrop-filter: blur(25px);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            display: none;
+            flex-direction: column;
+            box-shadow: var(--shadow-premium);
+            min-width: 140px;
+        }
+
+        .context-submenu.active {
+            display: flex;
+        }
+
+        .context-submenu .context-item {
+            padding: 8px 24px;
+            font-size: 0.85rem;
+        }
+
+        /* 認証セクション */
+        .auth-widget {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            z-index: 100;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+        }
+
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+
+        /* エクスプローラー */
+        #screen-explorer {
+            padding-top: 100px;
+        }
+
+        .explorer-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 80px;
+        }
+
+        .explorer-header-bar {
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid var(--border-glass);
+        }
+
+        .breadcrumb-modern {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-dim);
+            font-size: 0.95rem;
+        }
+
+        .breadcrumb-modern span {
+            cursor: pointer;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .breadcrumb-modern span:hover {
+            color: var(--primary-light);
+        }
+
+        .breadcrumb-modern .active {
+            color: var(--text-main);
+            font-weight: 600;
+            cursor: default;
+        }
+
+        .breadcrumb-modern .active:hover {
+            color: var(--text-main);
+        }
+
+        .breadcrumb-modern i {
+            font-size: 1.2rem;
+        }
+
+        .explorer-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-content: stretch;
+            position: relative;
+        }
+
+        .selection-marquee {
+            position: absolute;
+            background: rgba(99, 102, 241, 0.2);
+            border: 1px solid var(--primary);
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+        }
+
+        .grid-item {
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            text-align: left;
+            gap: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            position: relative;
+        }
+
+        .grid-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .grid-item.selected {
+            background: rgba(99, 102, 241, 0.12);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .grid-item i {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .grid-item .folder-icon {
+            color: #facc15;
+        }
+
+        .grid-item .file-icon {
+            color: var(--primary-light);
+        }
+
+        .grid-item .storage-icon {
+            color: var(--accent);
+        }
+
+        /* Folder/File Distinction */
+        .grid-item[data-type="folder"] {
+            border-left: 3px solid #facc15;
+            background: rgba(250, 204, 21, 0.05);
+        }
+
+        .grid-item[data-type="file"] {
+            border-left: 3px solid var(--primary-light);
+        }
+
+        .grid-item .google-icon {
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .grid-item .google-icon svg {
+            width: 24px;
+            height: 24px;
+        }
+
+        .item-label {
+            font-size: 1rem;
+            font-weight: 500;
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .drag-handle {
+            color: var(--text-dim);
+            font-size: 20px !important;
+            cursor: grab;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+
+        .grid-item:hover .drag-handle {
+            opacity: 1;
+        }
+
+        .grid-item.dragging {
+            opacity: 0.5;
+            border: 2px dashed var(--primary);
+            background: var(--bg-glass);
+        }
+
+        /* Drop indicator */
+        .drop-indicator {
+            height: 2px;
+            background: var(--primary);
+            border-radius: 2px;
+            margin: 4px 0;
+            display: none;
+        }
+
+        /* フッターツール */
+        .explorer-action-bar {
+            position: absolute;
+            bottom: 24px;
+            left: 24px;
+            right: 24px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(calc(100% + 40px));
+            transition: var(--transition);
+            z-index: 100;
+        }
+
+        @media (max-width: 600px) {
+            .explorer-action-bar {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 12px 16px;
+                bottom: 12px;
+                left: 12px;
+                right: 12px;
+                gap: 12px;
+                height: auto;
+            }
+            #selection-info { width: 100%; text-align: center; }
+            #selection-info div { font-size: 0.9rem !important; }
+            .explorer-action-bar .primary-btn {
+                padding: 10px 16px;
+                font-size: 0.85rem;
+                flex: 1;
+            }
+            .explorer-action-bar > div:last-child {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        .explorer-action-bar.visible {
+            transform: translateY(0);
+        }
+
+        .primary-btn {
+            padding: 12px 28px;
+            border-radius: 14px;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+            transition: var(--transition);
+        }
+
+        .primary-btn:hover {
+            transform: scale(1.05);
+            background: var(--primary-light);
+        }
+
+        .primary-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 練習画面 */
+        .practice-card {
+            width: 100%;
+            max-width: 500px;
+            margin: auto;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+
+        .question-badge {
+            background: var(--primary);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* 進捗バー */
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 5px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            width: 0%;
+            transition: width 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        #confetti-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 2000;
+        }
+
+        .answer-input-wrapper {
+            width: 100%;
+            position: relative;
+        }
+
+        #answer-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--border-glass);
+            padding: 16px;
+            font-size: 2rem;
+            text-align: center;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        #answer-input:focus {
+            border-color: var(--primary);
+        }
+
+        /* ロード中 */
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.5s;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid var(--border-glass);
+            border-bottom-color: var(--primary);
+            border-radius: 50%;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* モーダル */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            width: 90%;
+            max-width: 450px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            color: white;
+            outline: none;
+            font-family: inherit;
+        }
+
+        /* レスポンシブ修正 */
+        @media (max-width: 600px) {
+            .nav-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-item {
+                padding: 12px;
+            }
+
+            .grid-item i {
+                font-size: 32px;
+            }
+
+            .item-label {
+                font-size: 0.8rem;
+            }
+
+            .main-hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .explorer-action-bar {
+                bottom: 12px;
+                left: 12px;
+                right: 12px;
+                padding: 12px 16px;
+                flex-direction: row;
+                gap: 12px;
+            }
+
+            .primary-btn {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+
+            #selection-info {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+
+<body oncontextmenu="return false;">
+
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- コンテキストメニュー -->
+    <div class="context-menu glass-card" id="context-menu" style="display:none;">
+        <div class="context-item" id="ctx-new" onclick="toggleSubMenu(event)" style="position:relative;">
+            <div style="display:flex; align-items:center; gap:12px;"><i class='bx bx-plus-circle'></i> 新規作成</div>
+            <i class='bx bx-chevron-right' id="submenu-arrow"></i>
+            <div class="context-submenu" id="context-submenu">
+                <div class="context-item" onclick="addFile(event)"><i class='bx bx-file-blank'></i> ファイル</div>
+                <div class="context-item" onclick="openFolderModal(event)"><i class='bx bx-folder-plus'></i> フォルダ</div>
+            </div>
+        </div>
+        <div class="context-item" id="ctx-practice" onclick="startPracticeFromMenu()"><i class='bx bx-play-circle'></i> 練習を開始</div>
+        <div class="context-item" id="ctx-export" onclick="exportJson()"><i class='bx bx-export'></i> エクスポート</div>
+        <div class="context-item" id="ctx-rename" onclick="openRenameModal()"><i class='bx bx-edit-alt'></i> 名前を変更</div>
+        <div class="context-item" id="ctx-delete" style="color:#f87171;" onclick="deleteSelected()"><i class='bx bx-trash'></i> 削除</div>
+    </div>
+
+    <div class="loader-overlay" id="loader">
+        <div class="loader"></div>
+    </div>
+
+    <div class="app-container">
+        <canvas id="confetti-canvas" style="position:fixed; inset:0; pointer-events:none; z-index:1000;"></canvas>
+        <!-- 恒常ツールバー -->
+        <div class="top-toolbar">
+            <div class="floating-btn glass-card" id="btn-back-home" onclick="goHome()" style="display:none;">
+                <i class='bx bx-chevron-left'></i>
+            </div>
+            <div style="flex:1"></div>
+            <div class="floating-btn glass-card" onclick="openSettings()">
+                <i class='bx bx-cog'></i>
+            </div>
+        </div>
+
+        <!-- 設定画面 (以前のauth-widgetを統合) -->
+        <div class="screen" id="screen-settings">
+            <div class="practice-card glass-card" style="max-width:450px; padding:0; overflow:hidden;">
+                <div
+                    style="padding:40px; text-align:center; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border-glass);">
+                    <div id="settings-user-info">
+                        <img id="user-avatar" class="user-avatar" src="https://via.placeholder.com/60" alt="Avatar">
+                        <h2 id="user-display-name" style="margin-top:15px; font-size:1.5rem;">Guest User</h2>
+                        <p id="user-email" style="color:var(--text-dim); font-size:0.9rem;">Sign in to sync with Google
+                        </p>
+                    </div>
+                </div>
+
+                <div class="settings-list">
+                    <div class="settings-item">
+                        <span>Appearance</span>
+                        <div class="floating-btn glass-card"
+                            style="width:100px; height:40px; font-size:0.9rem; gap:8px;" onclick="toggleTheme()">
+                            <i class='bx bx-moon' id="theme-icon-settings"></i> <span id="txt-theme-label">Dark</span>
+                        </div>
+                    </div>
+
+                    <div class="settings-item" id="btn-google-sync">
+                        <span>Google Sync</span>
+                        <button class="primary-btn" style="padding:8px 16px; font-size:0.9rem;"
+                            onclick="handleLogin()">Login</button>
+                    </div>
+
+                    <div class="settings-item" id="btn-google-signout" style="display:none;">
+                        <span>Account</span>
+                        <button class="primary-btn"
+                            style="padding:8px 16px; font-size:0.9rem; background:rgba(248,113,113,0.15); color:#f87171; box-shadow:none;"
+                            onclick="handleLogout()">Logout</button>
+                    </div>
+
+                    <div class="settings-item">
+                        <span>Version</span>
+                        <span style="color:var(--text-dim);">Beta 2.0</span>
+                    </div>
+                </div>
+
+                <div style="padding:20px;">
+                    <button class="primary-btn"
+                        style="width:100%; background:var(--bg-glass); border:1px solid var(--border-glass);"
+                        onclick="goHome()">Close Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ホーム画面 -->
+        <div class="screen active" id="screen-home">
+            <div class="main-hero">
+                <h1>Social Quiz</h1>
+                <p>Learn better with synchronized quiz lists.</p>
+            </div>
+            <div class="nav-grid">
+                <div class="nav-card glass-card" onclick="openExplorer()">
+                    <i class='bx bx-folder-open'></i>
+                    <div>
+                        <h3>Library</h3>
+                        <p>Manage your quiz collections</p>
+                    </div>
+                </div>
+                <div class="nav-card glass-card" onclick="openPracticeSelector()">
+                    <i class='bx bx-play-circle'></i>
+                    <div>
+                        <h3>Practice</h3>
+                        <p>Training mode with selected items</p>
+                    </div>
+                </div>
+            </div>
+            <p style="font-size: 0.75rem; opacity: 0.4; margin-top: 20px;">Beta Version • Continuous Cloud Sync Enabled
+            </p>
+        </div>
+
+        <!-- エクスプローラー画面 -->
+        <div class="screen" id="screen-explorer">
+            <div class="explorer-container glass-card">
+                <div class="explorer-header-bar">
+                    <div class="floating-btn" id="btn-explorer-back" onclick="goBackExplorer()">
+                        <i class='bx bx-arrow-back'></i>
+                    </div>
+                    <div class="breadcrumb-modern" id="explorer-breadcrumb">
+                        <!-- Breadcrumb items inject here -->
+                    </div>
+                </div>
+
+                <!-- サブツールバー -->
+                <div class="explorer-header-bar" style="padding: 10px 20px; gap: 8px; justify-content: flex-start;">
+                    <button class="floating-btn" id="btn-select-mode" style="width:36px; height:36px; font-size:16px;"
+                        onclick="toggleSelectMode()" title="Select Mode"><i class='bx bx-select-multiple'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;"
+                        onclick="openFolderModal()" title="New Folder"><i class='bx bx-folder-plus'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="addFile()"
+                        title="Add Quiz"><i class='bx bx-plus'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="importJson()"
+                        title="Import"><i class='bx bx-import'></i></button>
+                    <button class="floating-btn" style="width:36px; height:36px; font-size:16px;" onclick="exportJson()"
+                        title="Export"><i class='bx bx-export'></i></button>
+                    <button class="floating-btn" id="btn-delete"
+                        style="width:36px; height:36px; font-size:16px; display:none; color:#f87171;"
+                        onclick="deleteSelected()"><i class='bx bx-trash'></i></button>
+                </div>
+
+                <div class="explorer-content" id="explorer-list" oncontextmenu="handleBackgroundContextMenu(event)">
+                    <div class="selection-marquee" id="marquee"></div>
+                    <!-- Grid items inject here -->
+                </div>
+            </div>
+
+            <!-- アクションバー -->
+            <div class="explorer-action-bar glass-card" id="explorer-action-bar">
+                <div id="selection-info">
+                    <div style="font-size:1.1rem; font-weight:700;" id="txt-selected-count">0 Items selected</div>
+                    <div style="font-size:0.8rem; color:var(--text-dim);" id="txt-selected-sub">Ready to practice</div>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    <button class="primary-btn" style="background:var(--bg-glass); border:1px solid var(--border-glass);" onclick="exportJson()">Export</button>
+                    <button class="primary-btn" id="btn-start-training" onclick="startPracticeFromMenu()">Start Training</button>
+                </div>
+            </div>
+        </div>
+
+        <input type="file" id="json-file-input" accept=".json" style="display: none;">
+
+        <!-- 練習画面 -->
+        <div class="screen" id="screen-practice">
+            <div class="practice-card glass-card">
+                <div class="progress-container">
+                    <div class="progress-fill" id="practice-progress-fill"></div>
+                </div>
+                <div class="question-badge" id="txt-progress-badge">Question 1 / 10</div>
+                <div style="text-align:center">
+                    <div style="font-size:0.9rem; color:var(--text-dim); margin-bottom:5px;">Time elapsed: <span
+                            id="timer-val">00:00</span></div>
+                </div>
+
+                <div class="answer-input-wrapper">
+                    <input type="text" id="answer-input" placeholder="Type answer..." autocomplete="off">
+                </div>
+
+                <div id="practice-feedback" style="min-height:24px; font-weight:600; text-align:center;"></div>
+
+                <button class="primary-btn" style="width:100%; padding:18px;" id="btn-submit-answer"
+                    onclick="checkAnswer()">Submit Answer</button>
+            </div>
+        </div>
+
+        <!-- リザルト画面 -->
+        <div class="screen" id="screen-result">
+            <div class="practice-card glass-card" style="text-align:center">
+                <i class='bx bxs-trophy' style="font-size:5rem; color:#facc15;"></i>
+                <h2 style="font-size:2.2rem; font-weight:800;">Well Done!</h2>
+
+                <div style="display:flex; gap:30px; margin:10px 0;">
+                    <div>
+                        <div style="font-size:0.8rem; color:var(--text-dim)">Time</div>
+                        <div style="font-size:1.5rem; font-weight:700;" id="res-time">00:00</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:var(--text-dim)">Accuracy</div>
+                        <div style="font-size:1.5rem; font-weight:700;" id="res-rate">100%</div>
+                    </div>
+                </div>
+
+                <div id="review-section" style="width:100%; text-align:left; display:none;">
+                    <div style="font-weight:700; color:#f87171; margin-bottom:10px;"><i class='bx bx-error-circle'></i>
+                        Mistakes</div>
+                    <div id="review-list"
+                        style="max-height:150px; overflow-y:auto; font-size:0.9rem; display:flex; flex-direction:column; gap:8px;">
+                    </div>
+                </div>
+
+                <div style="display:flex; width:100%; gap:12px;">
+                    <button class="primary-btn" style="flex:1; background:var(--secondary);" id="btn-retry"
+                        onclick="retryMistakes()">Retry</button>
+                    <button class="primary-btn"
+                        style="flex:1; background:var(--bg-glass); border:1px solid var(--border-glass);"
+                        onclick="goHome()">Finish</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- モーダル -->
+    <div class="modal-overlay" id="modal-base">
+        <div class="modal-box glass-card">
+            <h3 id="modal-title">Title</h3>
+            <div id="modal-body"></div>
+            <div style="display:flex; gap:12px; margin-top:20px;">
+                <button class="primary-btn"
+                    style="flex:1; background:var(--bg-glass); border:1px solid var(--border-glass);"
+                    onclick="closeModal()">Cancel</button>
+                <button class="primary-btn" style="flex:1;" id="modal-confirm-btn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts (Module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWhxfi3efSXXN3LhzjqYAD8r_WT-YWqG0",
+            authDomain: "test-d71db.firebaseapp.com",
+            projectId: "test-d71db",
+            storageBucket: "test-d71db.firebasestorage.app",
+            messagingSenderId: "617785886761",
+            appId: "1:617785886761:web:ae0b8af4c64759ee387438",
+            measurementId: "G-BXGLFRJ3JF"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const provider = new GoogleAuthProvider();
+
+        window.currentUser = null;
+
+        // AUTH FUNCTIONS
+        window.handleLogin = async () => {
+            try { await signInWithPopup(auth, provider); }
+            catch (e) { console.error(e); alert("Login failed"); }
+        };
+
+        window.handleLogout = async () => {
+            if (confirm("Logout?")) await signOut(auth);
+        };
+
+        window.syncToCloud = async (data) => {
+            if (!window.currentUser) return;
+            try {
+                await setDoc(doc(db, "users", window.currentUser.uid), {
+                    appData: JSON.stringify(data),
+                    updatedAt: new Date().toISOString()
+                }, { merge: true });
+                console.log("Synced");
+            } catch (e) { console.error("Sync failed", e); }
+        };
+
+        async function fetchFromCloud(uid) {
+            try {
+                const snap = await getDoc(doc(db, "users", uid));
+                if (snap.exists() && snap.data().appData) return JSON.parse(snap.data().appData);
+            } catch (e) { console.error("Fetch failed", e); }
+            return null;
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            const btnGoogleSync = document.getElementById('btn-google-sync');
+            const btnGoogleSignout = document.getElementById('btn-google-signout');
+
+            if (user) {
+                window.currentUser = user;
+                document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/60';
+                document.getElementById('user-display-name').innerText = user.displayName;
+                document.getElementById('user-email').innerText = user.email;
+                btnGoogleSync.style.display = 'none';
+                btnGoogleSignout.style.display = 'flex';
+
+                const cloudData = await fetchFromCloud(user.uid);
+                if (cloudData) {
+                    window.appData.google = cloudData;
+                    if (window.renderExplorer) window.renderExplorer();
+                }
+            } else {
+                window.currentUser = null;
+                document.getElementById('user-avatar').src = 'https://via.placeholder.com/60';
+                document.getElementById('user-display-name').innerText = 'Guest User';
+                document.getElementById('user-email').innerText = 'Sign in to sync with Google';
+                btnGoogleSync.style.display = 'flex';
+                btnGoogleSignout.style.display = 'none';
+                window.appData.google = { name: 'Google Storage', folders: [], items: [] };
+                if (window.renderExplorer) window.renderExplorer();
+            }
+        });
+    </script>
+
+    <!-- App Logic -->
+    <script>
+        // DOM ELEMENTS & STATE
+        const screens = ['home', 'explorer', 'practice', 'result', 'settings'];
+        window.appData = {
+            local: { name: 'Local Storage', folders: [], items: [] },
+            google: { name: 'Google Storage', folders: [], items: [] }
+        };
+        let currentFolder = null;
+        let pathStack = [];
+        let selectedItemForPractice = null;
+        let multiSelectItems = new Set();
+
+        window.goHome = () => {
+            if (practiceTimer) clearInterval(practiceTimer);
+            currentFolder = null;
+            pathStack = [];
+            selectedItemForPractice = null;
+            multiSelectItems.clear();
+            changeScreen('home');
+        };
+
+        window.goBackExplorer = () => {
+            if (pathStack.length > 0) {
+                pathStack.pop();
+                currentFolder = pathStack.length === 0 ? null : findFolder(pathStack);
+                multiSelectItems.clear();
+                selectedItemForPractice = null;
+                renderExplorer();
+            } else {
+                goHome();
+            }
+        };
+
+        function findFolder(stack) {
+            let target = appData[stack[0]];
+            for (let i = 1; i < stack.length; i++) {
+                target = target.folders.find(f => f.name === stack[i]);
+            }
+            return target;
+        }
+        let isSelectMode = false;
+        let practiceList = [];
+        let practiceIndex = 0;
+        let practiceStartTime = 0;
+        let practiceTimer = null;
+        let mistakes = [];
+        let confettiParticles = [];
+        let confettiAnimationId = null;
+        let isChecking = false;
+
+        // INITIALIZATION
+        window.onload = async () => {
+            loadLocalData();
+            setTimeout(() => {
+                document.getElementById('loader').style.opacity = '0';
+                setTimeout(() => document.getElementById('loader').style.display = 'none', 500);
+            }, 800);
+        };
+
+        // NAVIGATION
+        window.changeScreen = (target) => {
+            screens.forEach(s => {
+                const el = document.getElementById(`screen-${s}`);
+                el.classList.remove('active');
+            });
+            document.getElementById(`screen-${target}`).classList.add('active');
+
+            // Show/Hide back button
+            document.getElementById('btn-back-home').style.display = target === 'home' ? 'none' : 'flex';
+        };
+
+        window.openSettings = () => changeScreen('settings');
+
+        // THEME
+        window.toggleTheme = () => {
+            const body = document.body;
+            const iconSettings = document.getElementById('theme-icon-settings');
+            const label = document.getElementById('txt-theme-label');
+            if (body.getAttribute('data-theme') === 'light') {
+                body.removeAttribute('data-theme');
+                if (iconSettings) iconSettings.className = 'bx bx-moon';
+                if (label) label.innerText = 'Dark';
+            } else {
+                body.setAttribute('data-theme', 'light');
+                if (iconSettings) iconSettings.className = 'bx bx-sun';
+                if (label) label.innerText = 'Light';
+            }
+        };
+
+        // DATA MANAGEMENT
+        function loadLocalData() {
+            const saved = localStorage.getItem('shakai_app_data_local');
+            if (saved) window.appData.local = JSON.parse(saved);
+            else {
+                // Migration from old app
+                const old = localStorage.getItem('shakai_app_data');
+                if (old) {
+                    window.appData.local = JSON.parse(old);
+                    localStorage.removeItem('shakai_app_data');
+                    saveData();
+                }
+            }
+        }
+
+        window.saveData = () => {
+            localStorage.setItem('shakai_app_data_local', JSON.stringify(appData.local));
+            if (pathStack[0] === 'google' && window.syncToCloud) {
+                window.syncToCloud(appData.google);
+            }
+        };
+
+        // EXPLORER LOGIC
+        window.openExplorer = () => {
+            changeScreen('explorer');
+            renderExplorer();
+        };
+
+        window.openPracticeSelector = () => {
+            openExplorer();
+            // Optional: Auto-select current folder if any
+        };
+
+        window.renderExplorer = () => {
+            const list = document.getElementById('explorer-list');
+            const breadcrumb = document.getElementById('explorer-breadcrumb');
+            list.innerHTML = '<div class="selection-marquee" id="marquee"></div>';
+
+            updateBreadcrumb();
+            updateActionButtons();
+
+            const target = currentFolder || (pathStack.length === 0 ? { folders: ['local', 'google'] } : appData[pathStack[0]]);
+
+            if (pathStack.length === 0) {
+                target.folders.forEach(key => {
+                    const item = appData[key];
+                    // Enable selection tracking for storage items as well
+                    list.appendChild(createGridItem(item.name, key === 'google' ? 'google' : 'storage', (el) => handleItemClick(item, el), () => { 
+                        pathStack.push(key); 
+                        multiSelectItems.clear();
+                        renderExplorer(); 
+                    }));
+                });
+            } else {
+                const folders = target.folders || [];
+                const items = target.items || [];
+
+                folders.forEach(f => {
+                    list.appendChild(createGridItem(f.name, 'folder', (el) => handleItemClick(f, el), () => { currentFolder = f; pathStack.push(f.name); renderExplorer(); }));
+                });
+                items.forEach(i => {
+                    list.appendChild(createGridItem(i.kanji, 'file', (el) => handleItemClick(i, el)));
+                });
+            }
+            updateSelectedUI();
+            setupDragSelection();
+            setupDragAndDrop();
+        };
+
+        function updateActionButtons() {
+            const isRoot = pathStack.length === 0;
+            const btns = document.querySelectorAll('.explorer-header-bar .floating-btn');
+            btns.forEach(btn => {
+                const isBack = btn.id === 'btn-explorer-back';
+                const isSelect = btn.id === 'btn-select-mode';
+                const isExport = btn.getAttribute('onclick')?.includes('exportJson');
+
+                if (isRoot && !isBack && !isSelect && !isExport) {
+                    btn.style.opacity = '0.3';
+                    btn.style.pointerEvents = 'none';
+                    btn.title = "Actions restricted in root";
+                } else {
+                    btn.style.opacity = '1';
+                    btn.style.pointerEvents = 'all';
+                    btn.title = "";
+                }
+            });
+        }
+
+        window.updateBreadcrumb = () => {
+            const breadcrumb = document.getElementById('explorer-breadcrumb');
+            breadcrumb.innerHTML = '';
+
+            const rootSpan = document.createElement('span');
+            rootSpan.innerHTML = `<i class='bx bx-hdd'></i> Storage Root`;
+            rootSpan.onclick = () => { pathStack = []; currentFolder = null; renderExplorer(); };
+            if (pathStack.length === 0) rootSpan.classList.add('active');
+            breadcrumb.appendChild(rootSpan);
+
+            pathStack.forEach((p, idx) => {
+                // Use createElement for separator to avoid innerHTML+= destroying onclick listeners
+                const sep = document.createElement('i');
+                sep.className = 'bx bx-chevron-right';
+                sep.style.opacity = '0.3';
+                breadcrumb.appendChild(document.createTextNode(' '));
+                breadcrumb.appendChild(sep);
+                breadcrumb.appendChild(document.createTextNode(' '));
+
+                const span = document.createElement('span');
+                const label = idx === 0 ? appData[p].name : p;
+                span.innerText = label;
+
+                const isCurrent = idx === pathStack.length - 1;
+                if (!isCurrent) {
+                    span.onclick = () => {
+                        pathStack = pathStack.slice(0, idx + 1);
+                        currentFolder = idx === 0 ? null : findFolder(pathStack);
+                        multiSelectItems.clear();
+                        selectedItemForPractice = null;
+                        renderExplorer();
+                    };
+                    span.style.cursor = 'pointer';
+                } else {
+                    span.classList.add('active');
+                    span.style.cursor = 'default';
+                }
+                breadcrumb.appendChild(span);
+            });
+        };
+
+        function createGridItem(label, type, onclick, ondoubleclick) {
+            const div = document.createElement('div');
+            div.className = 'grid-item glass-card';
+            div.setAttribute('draggable', 'true');
+            div.dataset.label = label;
+            div.dataset.type = type; // For styling
+
+            let iconHtml = '';
+            if (type === 'google') {
+                iconHtml = `<div class="google-icon"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 12-4.53z"/></svg></div>`;
+            } else {
+                iconHtml = `<i class='bx ${type === 'folder' ? 'bxs-folder folder-icon' : type === 'storage' ? 'bx-hdd storage-icon' : 'bx-file file-icon'}'></i>`;
+            }
+
+            const handleHtml = (type === 'folder' || type === 'file') ? `<i class='bx bx-dots-vertical-rounded drag-handle'></i>` : '';
+
+            div.innerHTML = `${iconHtml}<div class="item-label">${label}</div>${handleHtml}`;
+            div.onclick = (e) => { e.stopPropagation(); onclick(div); };
+            if (ondoubleclick) div.ondblclick = (e) => { e.stopPropagation(); ondoubleclick(); };
+
+            // Context Menu
+            div.oncontextmenu = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const itemObj = findItemByLabel(label);
+                if (itemObj) {
+                    if (pathStack.length === 0) return; // Disable menu in Storage Root
+                    // User requested: If not selected, hide delete/practice buttons
+                    const isSelected = multiSelectItems.has(itemObj) || selectedItemForPractice === itemObj;
+                    showContextMenu(e.clientX, e.clientY, isSelected);
+                }
+            };
+
+            // Re-select if in multiple selection
+            const itemObj = findItemByLabel(label);
+            if (itemObj && multiSelectItems.has(itemObj)) div.classList.add('selected');
+            else if (itemObj && selectedItemForPractice === itemObj) div.classList.add('selected');
+
+            return div;
+        }
+
+        function showContextMenu(x, y, isItemTargeted) {
+            const menu = document.getElementById('context-menu');
+            if (!menu) return;
+
+            // Reset sub-menu
+            const submenu = document.getElementById('context-submenu');
+            const arrow = document.getElementById('submenu-arrow');
+            if (submenu) submenu.classList.remove('active');
+            if (arrow) arrow.style.transform = '';
+
+            // Toggle item-specific buttons
+            const practice = document.getElementById('ctx-practice');
+            const rename = document.getElementById('ctx-rename');
+            const del = document.getElementById('ctx-delete');
+            const exp = document.getElementById('ctx-export');
+            
+            const display = isItemTargeted ? 'flex' : 'none';
+            if (practice) practice.style.display = display;
+            if (rename) rename.style.display = display;
+            if (del) del.style.display = display;
+            if (exp) exp.style.display = display;
+
+            menu.style.display = 'block';
+
+            const winW = window.innerWidth;
+            const winH = window.innerHeight;
+            const menuW = menu.offsetWidth;
+            const menuH = menu.offsetHeight;
+
+            let left = x;
+            let top = y;
+
+            if (x + menuW > winW) left = x - menuW;
+            if (top + menuH > winH) top = y - menuH;
+
+            menu.style.left = left + 'px';
+            menu.style.top = top + 'px';
+        }
+
+        function hideContextMenu() {
+            const menu = document.getElementById('context-menu');
+            if (menu) menu.style.display = 'none';
+        }
+
+        window.toggleSubMenu = (e) => {
+            e.stopPropagation();
+            const submenu = document.getElementById('context-submenu');
+            const arrow = document.getElementById('submenu-arrow');
+            
+            // Toggle active state
+            const isActive = submenu.classList.toggle('active');
+            arrow.style.transform = isActive ? 'rotate(90deg)' : '';
+
+            // Ensure submenu stays on screen if it overflows on the right
+            if (isActive) {
+                const rect = submenu.getBoundingClientRect();
+                if (rect.right > window.innerWidth) {
+                    submenu.style.left = 'auto';
+                    submenu.style.right = 'calc(100% + 5px)';
+                    arrow.style.transform = isActive ? 'rotate(-90deg)' : '';
+                } else {
+                    submenu.style.left = 'calc(100% + 5px)';
+                    submenu.style.right = 'auto';
+                }
+            }
+        };
+
+        window.handleBackgroundContextMenu = (e) => {
+            if (e.target.id === 'explorer-list' || e.target.classList.contains('explorer-content')) {
+                e.preventDefault();
+                if (pathStack.length === 0) return;
+                
+                // User requested: If selected, clear selection and hide item buttons
+                if (multiSelectItems.size > 0 || selectedItemForPractice) {
+                    multiSelectItems.clear();
+                    selectedItemForPractice = null;
+                    document.querySelectorAll('.grid-item').forEach(el => el.classList.remove('selected'));
+                    updateSelectedUI();
+                }
+                
+                showContextMenu(e.clientX, e.clientY, false);
+            }
+        };
+
+        window.onclick = () => {
+            hideContextMenu();
+        };
+
+        function findItemByLabel(label) {
+            // At root level, storage items are appData entries themselves
+            if (pathStack.length === 0) {
+                return Object.values(appData).find(v => v.name === label) || null;
+            }
+            const target = currentFolder || appData[pathStack[0]];
+            if (!target) return null;
+            return (target.folders || []).find(f => f.name === label) || (target.items || []).find(i => i.kanji === label);
+        }
+
+        window.handleItemClick = (item, el) => {
+            if (isSelectMode) {
+                if (multiSelectItems.has(item)) {
+                    multiSelectItems.delete(item);
+                    el.classList.remove('selected');
+                } else {
+                    multiSelectItems.add(item);
+                    el.classList.add('selected');
+                }
+                selectedItemForPractice = multiSelectItems.size === 1 ? Array.from(multiSelectItems)[0] : null;
+            } else {
+                document.querySelectorAll('.grid-item').forEach(i => i.classList.remove('selected'));
+                if (selectedItemForPractice === item) {
+                    selectedItemForPractice = null;
+                } else {
+                    selectedItemForPractice = item;
+                    el.classList.add('selected');
+                }
+                multiSelectItems.clear();
+                if (selectedItemForPractice) multiSelectItems.add(selectedItemForPractice);
+            }
+            updateSelectedUI();
+        };
+
+        window.toggleSelectMode = () => {
+            isSelectMode = !isSelectMode;
+            const btn = document.getElementById('btn-select-mode');
+            btn.style.background = isSelectMode ? 'var(--primary)' : '';
+            btn.style.color = isSelectMode ? 'white' : '';
+            if (!isSelectMode) {
+                // Keep current single selection if any
+            }
+        };
+
+        function updateSelectedUI() {
+            const count = multiSelectItems.size;
+            const bar = document.getElementById('explorer-action-bar');
+            const txtCount = document.getElementById('txt-selected-count');
+            const btnDel = document.getElementById('btn-delete');
+            const btnExportHeader = document.querySelector('.explorer-header-bar .floating-btn[onclick*="exportJson"]');
+            if (count > 0) {
+                bar.classList.add('visible');
+                txtCount.innerText = `${count} Item${count > 1 ? 's' : ''} selected`;
+                btnDel.style.display = 'flex';
+            } else {
+                bar.classList.remove('visible');
+                btnDel.style.display = 'none';
+            }
+
+            // Disable sub-toolbar Export button when multiple items are selected
+            if (btnExportHeader) {
+                if (count > 1) {
+                    btnExportHeader.style.opacity = '0.3';
+                    btnExportHeader.style.pointerEvents = 'none';
+                    btnExportHeader.title = 'Cannot export multiple items at once';
+                } else {
+                    btnExportHeader.style.opacity = '';
+                    btnExportHeader.style.pointerEvents = '';
+                    btnExportHeader.title = 'Export';
+                }
+            }
+        }
+
+        function setupDragAndDrop() {
+            const container = document.getElementById('explorer-list');
+            let draggedElement = null;
+            let longPressTimer = null;
+            let isTouchDragging = false;
+            
+            let indicator = document.querySelector('.drop-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.className = 'drop-indicator';
+                container.appendChild(indicator);
+            }
+
+            const items = document.querySelectorAll('.grid-item');
+            
+            items.forEach(item => {
+                const type = item.dataset.type;
+                if (type !== 'folder' && type !== 'file') {
+                    item.setAttribute('draggable', 'false');
+                    return;
+                }
+
+                // Mouse Dragging (Standard HTML5 DND)
+                item.addEventListener('dragstart', (e) => {
+                    draggedElement = item;
+                    item.classList.add('dragging');
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                item.addEventListener('dragend', () => {
+                    endDrag();
+                });
+
+                // Touch Dragging (Custom Implementation)
+                item.addEventListener('touchstart', (e) => {
+                    if (isSelectMode) return; // Don't drag while selecting
+                    
+                    longPressTimer = setTimeout(() => {
+                        draggedElement = item;
+                        isTouchDragging = true;
+                        item.classList.add('dragging');
+                        // Haptic feedback if available
+                        if (navigator.vibrate) navigator.vibrate(50);
+                    }, 500); // 0.5s long-press
+                }, { passive: true });
+
+                item.addEventListener('touchmove', (e) => {
+                    if (longPressTimer) {
+                        // If they move too much before long press, cancel it
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+
+                    if (isTouchDragging) {
+                        e.preventDefault(); // Prevent scroll while dragging
+                        const touch = e.touches[0];
+                        const target = getDragTarget(touch.clientY);
+                        
+                        indicator.style.display = 'block';
+                        if (target) {
+                            container.insertBefore(indicator, target);
+                        } else {
+                            container.appendChild(indicator);
+                        }
+                    }
+                }, { passive: false });
+
+                item.addEventListener('touchend', (e) => {
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
+
+                    if (isTouchDragging) {
+                        const touch = e.changedTouches[0];
+                        const fromLabel = draggedElement.dataset.label;
+                        const target = getDragTarget(touch.clientY);
+                        const toLabel = target ? target.dataset.label : null;
+
+                        if (fromLabel !== toLabel) {
+                            reorderData(fromLabel, toLabel);
+                        }
+                        
+                        endDrag();
+                        renderExplorer();
+                    }
+                });
+            });
+
+            container.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!draggedElement) return;
+
+                const target = getDragTarget(e.clientY);
+                if (target) {
+                    indicator.style.display = 'block';
+                    container.insertBefore(indicator, target);
+                } else {
+                    indicator.style.display = 'block';
+                    container.appendChild(indicator);
+                }
+            });
+
+            container.addEventListener('drop', (e) => {
+                e.preventDefault();
+                if (!draggedElement) return;
+
+                const fromLabel = draggedElement.dataset.label;
+                const target = getDragTarget(e.clientY);
+                const toLabel = target ? target.dataset.label : null;
+
+                if (fromLabel !== toLabel) {
+                    reorderData(fromLabel, toLabel);
+                }
+
+                endDrag();
+                renderExplorer();
+            });
+
+            function endDrag() {
+                if (draggedElement) draggedElement.classList.remove('dragging');
+                draggedElement = null;
+                isTouchDragging = false;
+                indicator.style.display = 'none';
+            }
+
+            function getDragTarget(y) {
+                const items = [...container.querySelectorAll('.grid-item:not(.dragging)')];
+                return items.find(item => {
+                    const rect = item.getBoundingClientRect();
+                    return y < rect.top + rect.height / 2;
+                });
+            }
+        }
+
+        function reorderData(fromLabel, toLabel) {
+            const parent = getTarget();
+            if (!parent) return;
+
+            const allItems = [...(parent.folders || []), ...(parent.items || [])];
+            const fromIdx = allItems.findIndex(i => (i.name || i.kanji) === fromLabel);
+            
+            if (fromIdx === -1) return;
+            const item = allItems.splice(fromIdx, 1)[0];
+
+            if (toLabel) {
+                const toIdx = allItems.findIndex(i => (i.name || i.kanji) === toLabel);
+                if (toIdx !== -1) {
+                    allItems.splice(toIdx, 0, item);
+                } else {
+                    allItems.push(item);
+                }
+            } else {
+                allItems.push(item);
+            }
+
+            parent.folders = allItems.filter(i => i.folders !== undefined);
+            parent.items = allItems.filter(i => i.folders === undefined);
+            
+            saveData();
+        }
+
+        // MODALS
+        window.openModal = (title, bodyHtml, confirmText, confirmAction) => {
+            hideContextMenu();
+            const overlay = document.getElementById('modal-base');
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = bodyHtml;
+            const btn = document.getElementById('modal-confirm-btn');
+            btn.innerText = confirmText;
+            btn.onclick = () => { confirmAction(); closeModal(); };
+            overlay.style.display = 'flex';
+        };
+
+        window.closeModal = () => document.getElementById('modal-base').style.display = 'none';
+
+        window.openFolderModal = (e) => {
+            if (e) e.stopPropagation();
+            if (pathStack.length === 0) return;
+            openModal('New Folder', '<input type="text" id="modal-input" placeholder="Folder name">', 'Create', () => {
+                const val = document.getElementById('modal-input').value.trim();
+                if (!val) return;
+                const target = currentFolder || appData[pathStack[0]];
+                if (!target.folders) target.folders = [];
+                target.folders.push({ name: val, folders: [], items: [] });
+                renderExplorer(); saveData();
+            });
+        };
+
+        window.openRenameModal = () => {
+            if (multiSelectItems.size !== 1) {
+                alert("Select exactly one item to rename");
+                return;
+            }
+            const item = Array.from(multiSelectItems)[0];
+            const currentName = item.name || item.kanji;
+
+            openModal('Rename', `<input type="text" id="modal-input" value="${currentName}">`, 'Rename', () => {
+                const val = document.getElementById('modal-input').value.trim();
+                if (!val || val === currentName) return;
+
+                if (item.folders) item.name = val;
+                else item.kanji = val;
+
+                renderExplorer(); saveData();
+            });
+        };
+
+        window.addFile = (e) => {
+            if (e) e.stopPropagation();
+            if (pathStack.length === 0) return;
+            openModal('Add Quizzes', '<textarea id="modal-text" placeholder="Type answers (one per line)"></textarea>', 'Add', () => {
+                const val = document.getElementById('modal-text').value.trim();
+                if (!val) return;
+                const target = currentFolder || appData[pathStack[0]];
+                if (!target.items) target.items = [];
+                val.split('\n').forEach(line => {
+                    if (line.trim()) target.items.push({ kanji: line.trim() });
+                });
+                renderExplorer(); saveData();
+            });
+        };
+
+        window.deleteSelected = () => {
+            hideContextMenu();
+            if (multiSelectItems.size === 0) return;
+            if (confirm(`Delete ${multiSelectItems.size} item(s)?`)) {
+                const target = getTarget();
+                multiSelectItems.forEach(item => {
+                    if (item.folders) {
+                        target.folders = target.folders.filter(f => f !== item);
+                    } else {
+                        target.items = target.items.filter(i => i !== item);
+                    }
+                });
+                multiSelectItems.clear();
+                selectedItemForPractice = null;
+                renderExplorer(); saveData(); updateSelectedUI();
+            }
+        };
+
+        window.importJson = () => {
+            hideContextMenu();
+            const input = document.getElementById('json-file-input');
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (re) => {
+                    try {
+                        const data = JSON.parse(re.target.result);
+                        const target = getTarget();
+                        if (Array.isArray(data)) {
+                            if (!target.items) target.items = [];
+                            data.forEach(item => { if (item.kanji) target.items.push(item); });
+                        } else {
+                            if (data.folders) target.folders = (target.folders || []).concat(data.folders);
+                            if (data.items) target.items = (target.items || []).concat(data.items);
+                        }
+                        renderExplorer(); saveData();
+                        alert("Imported successfully");
+                    } catch (e) { alert("Invalid JSON file"); }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        };
+
+        window.exportJson = () => {
+            hideContextMenu();
+            // When multiple items selected, export is disabled
+            if (multiSelectItems.size > 1) {
+                alert('Export is only available for a single item. Please select just one.');
+                return;
+            }
+
+            let target;
+            if (selectedItemForPractice) {
+                target = selectedItemForPractice;
+            } else if (pathStack.length === 0) {
+                // At root level — nothing meaningful to export without selection
+                alert('Please select an item to export.');
+                return;
+            } else {
+                target = currentFolder || appData[pathStack[0]];
+            }
+
+            if (!target) { alert('Nothing to export'); return; }
+
+            const filename = target.name || target.kanji || 'export';
+            const blob = new Blob([JSON.stringify(target, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+
+        function getTarget() {
+            return currentFolder || appData[pathStack[0]];
+        }
+
+        // PRACTICE LOGIC
+        window.startPracticeFromMenu = () => {
+            hideContextMenu();
+            practiceList = [];
+            const targetParent = getTarget();
+
+            if (multiSelectItems.size > 0) {
+                // To maintain order, iterate through the parent's actual lists
+                // and check if they are in multiSelectItems.
+                const allFolders = targetParent.folders || [];
+                const allItems = targetParent.items || [];
+
+                allFolders.forEach(f => {
+                    if (multiSelectItems.has(f)) {
+                        if (f.items) practiceList.push(...f.items);
+                    }
+                });
+                allItems.forEach(i => {
+                    if (multiSelectItems.has(i)) {
+                        practiceList.push(i);
+                    }
+                });
+            } else {
+                if (targetParent && targetParent.items) {
+                    practiceList = [...targetParent.items];
+                }
+            }
+
+            if (practiceList.length === 0) { alert("No questions found"); return; }
+
+            // Shuffle logic removed as per user request to maintain order
+
+            practiceIndex = 0;
+            mistakes = [];
+            practiceStartTime = Date.now();
+            changeScreen('practice');
+            startTimer();
+            showQuestion();
+        };
+
+        function showQuestion() {
+            const q = practiceList[practiceIndex];
+            if (!q) return;
+
+            const progress = ((practiceIndex) / practiceList.length) * 100;
+            document.getElementById('practice-progress-fill').style.width = `${progress}%`;
+            document.getElementById('txt-progress-badge').innerText = `Question ${practiceIndex + 1} / ${practiceList.length}`;
+
+            const input = document.getElementById('answer-input');
+            input.value = '';
+            // Focus with a small delay to ensure keyboard stays up on mobile
+            setTimeout(() => input.focus(), 10);
+
+            document.getElementById('practice-feedback').innerHTML = '';
+        }
+
+        function startTimer() {
+            if (practiceTimer) clearInterval(practiceTimer);
+            practiceTimer = setInterval(() => {
+                const diff = Math.floor((Date.now() - practiceStartTime) / 1000);
+                const m = String(Math.floor(diff / 60)).padStart(2, '0');
+                const s = String(diff % 60).padStart(2, '0');
+                document.getElementById('timer-val').innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        window.checkAnswer = () => {
+            if (isChecking) return;
+            const input = document.getElementById('answer-input');
+            const feedback = document.getElementById('practice-feedback');
+            const q = practiceList[practiceIndex];
+            if (!q) return;
+            const ans = input.value.trim();
+
+            if (ans === q.yomi || ans === q.kanji) {
+                isChecking = true;
+                fireCherryBlossoms();
+                
+                // Dim input and feedback to emphasize animation
+                input.style.opacity = '0.5';
+                feedback.innerHTML = '<span style="color:#f472b6; font-size:1.2rem; filter:drop-shadow(0 0 8px rgba(244,114,182,0.4))">Perfect!</span>';
+
+                setTimeout(() => {
+                    input.style.opacity = '1';
+                    isChecking = false;
+                    nextQuestion();
+                    input.focus();
+                }, 850);
+            } else {
+                isChecking = true;
+                input.style.borderBottomColor = '#f87171';
+                feedback.innerHTML = `<span style="color:#f87171">Incorrect. Correct answer: <b style="color:var(--primary)">${q.yomi || q.kanji}</b></span>`;
+                if (!mistakes.includes(q)) mistakes.push(q);
+                
+                setTimeout(() => {
+                    input.style.borderBottomColor = '';
+                    isChecking = false;
+                    nextQuestion();
+                    input.focus();
+                }, 2000); // 2 second delay to read the correct answer
+            }
+        };
+
+        function nextQuestion() {
+            practiceIndex++;
+            if (practiceIndex < practiceList.length) {
+                showQuestion();
+            } else {
+                finishPractice();
+            }
+        }
+
+        function finishPractice() {
+            clearInterval(practiceTimer);
+            changeScreen('result');
+
+            const diff = Math.floor((Date.now() - practiceStartTime) / 1000);
+            const m = String(Math.floor(diff / 60)).padStart(2, '0');
+            const s = String(diff % 60).padStart(2, '0');
+            document.getElementById('res-time').innerText = `${m}:${s}`;
+
+            const rate = Math.round(((practiceList.length - mistakes.length) / practiceList.length) * 100);
+            document.getElementById('res-rate').innerText = `${rate}%`;
+
+            const review = document.getElementById('review-section');
+            const list = document.getElementById('review-list');
+            if (mistakes.length > 0) {
+                review.style.display = 'block';
+                list.innerHTML = '';
+                mistakes.forEach(m => {
+                    list.innerHTML += `<div class="glass-card" style="padding:10px 15px; background:rgba(248,113,113,0.1)">${m.kanji}</div>`;
+                });
+                document.getElementById('btn-retry').style.display = 'block';
+            } else {
+                review.style.display = 'none';
+                document.getElementById('btn-retry').style.display = 'none';
+                startConfetti();
+            }
+        }
+
+        // CONFETTI & CHERRY BLOSSOMS
+        function fireCherryBlossoms() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            // Pink/White colors for cherry blossoms
+            const colors = ['#f472b6', '#fbcfe8', '#fdf2f8', '#f9a8d4'];
+            
+            for (let i = 0; i < 40; i++) {
+                confettiParticles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height * 0.4,
+                    size: Math.random() * 8 + 6,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    velX: (Math.random() - 0.5) * 12,
+                    velY: Math.random() * -15 - 5,
+                    rot: Math.random() * 360,
+                    rotVel: Math.random() * 10 - 5,
+                    gravity: 0.4
+                });
+            }
+            if (!confettiAnimationId) animatePetals();
+        }
+
+        function animatePetals() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            confettiParticles.forEach((p, idx) => {
+                p.velY += p.gravity;
+                p.x += p.velX;
+                p.y += p.velY;
+                p.rot += p.rotVel;
+
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.rot * Math.PI / 180);
+                ctx.fillStyle = p.color;
+                
+                // Draw petal shape (oval-ish)
+                ctx.beginPath();
+                ctx.ellipse(0, 0, p.size, p.size / 2, 0, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                if (p.y > canvas.height + 20) confettiParticles.splice(idx, 1);
+            });
+
+            if (confettiParticles.length > 0) {
+                confettiAnimationId = requestAnimationFrame(animatePetals);
+            } else {
+                confettiAnimationId = null;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            confettiParticles = [];
+            for (let i = 0; i < 150; i++) {
+                confettiParticles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    size: Math.random() * 8 + 4,
+                    color: `hsl(${Math.random() * 360}, 70%, 60%)`,
+                    velX: Math.random() * 3 - 1.5,
+                    velY: Math.random() * 5 + 3,
+                    rot: Math.random() * 360,
+                    rotVel: Math.random() * 10 - 5,
+                    gravity: 0.1 
+                });
+            }
+
+            let isStopped = false;
+            function update() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                confettiParticles.forEach((p, idx) => {
+                    p.velY += p.gravity;
+                    p.x += p.velX;
+                    p.y += p.velY;
+                    p.rot += p.rotVel;
+                    
+                    if (!isStopped && p.y > canvas.height) {
+                         p.y = -20;
+                         p.x = Math.random() * canvas.width;
+                    }
+
+                    ctx.save();
+                    ctx.translate(p.x, p.y);
+                    ctx.rotate(p.rot * Math.PI / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+                    ctx.restore();
+
+                    if (isStopped && p.y > canvas.height + 50) {
+                        confettiParticles.splice(idx, 1);
+                    }
+                });
+
+                if (confettiParticles.length > 0) {
+                    confettiAnimationId = requestAnimationFrame(update);
+                } else {
+                    confettiAnimationId = null;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }
+            }
+            update();
+            // Stop generating/looping after 4 seconds, let them fall off
+            setTimeout(() => { isStopped = true; }, 4000);
+        }
+
+        window.retryMistakes = () => {
+            practiceList = [...mistakes];
+            practiceList.sort(() => Math.random() - 0.5);
+            practiceIndex = 0;
+            mistakes = [];
+            practiceStartTime = Date.now();
+            changeScreen('practice');
+            startTimer();
+            showQuestion();
+        };
+
+        function setupDragSelection() {
+            const container = document.getElementById('explorer-list');
+            const marquee = document.getElementById('marquee');
+            let startX, startY;
+
+            container.onmousedown = (e) => {
+                if (e.button !== 0) return; // Only left click
+                
+                // Deselect if clicking on empty list space
+                if (e.target === container) {
+                    multiSelectItems.clear();
+                    selectedItemForPractice = null;
+                    updateSelectedUI();
+                    document.querySelectorAll('.grid-item').forEach(el => el.classList.remove('selected'));
+                }
+
+                if (e.target !== container && e.target.id !== 'marquee') return;
+                e.preventDefault();
+
+                const rect = container.getBoundingClientRect();
+                startX = e.clientX - rect.left + container.scrollLeft;
+                startY = e.clientY - rect.top + container.scrollTop;
+
+                marquee.style.left = startX + 'px';
+                marquee.style.top = startY + 'px';
+                marquee.style.width = '0px';
+                marquee.style.height = '0px';
+                marquee.style.display = 'block';
+
+                const onMouseMove = (me) => {
+                    const currentX = me.clientX - rect.left + container.scrollLeft;
+                    const currentY = me.clientY - rect.top + container.scrollTop;
+                    const x = Math.min(startX, currentX);
+                    const y = Math.min(startY, currentY);
+                    const w = Math.abs(startX - currentX);
+                    const h = Math.abs(startY - currentY);
+
+                    marquee.style.left = x + 'px';
+                    marquee.style.top = y + 'px';
+                    marquee.style.width = w + 'px';
+                    marquee.style.height = h + 'px';
+
+                    // Hit testing
+                    const marqueeRect = { left: x, top: y, right: x + w, bottom: y + h };
+                    const items = document.querySelectorAll('.grid-item');
+                    items.forEach(el => {
+                        const itemRect = {
+                            left: el.offsetLeft,
+                            top: el.offsetTop,
+                            right: el.offsetLeft + el.offsetWidth,
+                            bottom: el.offsetTop + el.offsetHeight
+                        };
+
+                        const isInside = !(itemRect.left > marqueeRect.right ||
+                            itemRect.right < marqueeRect.left ||
+                            itemRect.top > marqueeRect.bottom ||
+                            itemRect.bottom < marqueeRect.top);
+
+                        const label = el.querySelector('.item-label').innerText;
+                        const itemObj = findItemByLabel(label);
+                        if (!itemObj) return; // Skip if item couldn't be resolved
+
+                        if (isInside) {
+                            if (!multiSelectItems.has(itemObj)) {
+                                multiSelectItems.add(itemObj);
+                                el.classList.add('selected');
+                            }
+                        } else if (!isSelectMode) {
+                            // If not in permanent select mode, deselect items outside box
+                            multiSelectItems.delete(itemObj);
+                            el.classList.remove('selected');
+                        }
+                    });
+                    updateSelectedUI();
+                };
+
+                const onMouseUp = () => {
+                    window.removeEventListener('mousemove', onMouseMove);
+                    window.removeEventListener('mouseup', onMouseUp);
+                    marquee.style.display = 'none';
+                };
+
+                window.addEventListener('mousemove', onMouseMove);
+                window.addEventListener('mouseup', onMouseUp);
+            };
+        }
+
+        // Initial call
+        setupDragSelection();
+
+        // Keyboard Support
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                const activeScreen = screens.find(s => document.getElementById(`screen-${s}`).classList.contains('active'));
+                if (activeScreen === 'practice' && document.getElementById('answer-input') === document.activeElement) {
+                    checkAnswer();
+                }
+            }
+        });
+    </script>
+    <!-- Confetti Canvas -->
+    <canvas id="confetti-canvas"></canvas>
+</body>
+</html>
