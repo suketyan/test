@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>絵文字＆画像おみくじ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 通常モードの色 */
+            --bg-grad-1: #ffb199;
+            --bg-grad-2: #ff0844;
+            --glass-bg: rgba(255, 255, 255, 0.4);
+            --glass-border: rgba(255, 255, 255, 0.6);
+            --text-color: #2c3e50;
+            --btn-grad-1: #ff6a00;
+            --btn-grad-2: #ee0979;
+            --shadow-color: rgba(238, 9, 121, 0.4);
+        }
+
+        body.zone-active {
+            /* ゾーンモード（合成）の色 */
+            --bg-grad-1: #000000;
+            --bg-grad-2: #1a0033;
+            --glass-bg: rgba(10, 10, 30, 0.5);
+            --glass-border: rgba(0, 255, 255, 0.8);
+            --text-color: #ffffff;
+            --btn-grad-1: #00f2fe;
+            --btn-grad-2: #4facfe;
+            --shadow-color: rgba(0, 242, 254, 0.6);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2));
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            color: var(--text-color);
+            font-family: 'Outfit', 'Noto Sans JP', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.8s cubic-bezier(0.25, 0.8, 0.25, 1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* ゾーン中の合成(mix-blend-mode)を用いたダイナミック背景 */
+        .zone-fx-container {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0;
+            transition: opacity 1s;
+            mix-blend-mode: color-dodge; /* 合成効果の核 */
+        }
+
+        body.zone-active .zone-fx-container {
+            opacity: 1;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: float 8s infinite alternate ease-in-out;
+        }
+
+        .orb1 { width: 400px; height: 400px; background: #ff00ff; top: 10%; left: 10%; animation-delay: 0s; }
+        .orb2 { width: 500px; height: 500px; background: #00ffff; bottom: 0%; right: 10%; animation-delay: -4s; }
+        .orb3 { width: 350px; height: 350px; background: #ffff00; top: 50%; left: 40%; animation-delay: -2s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(0.8) rotate(0deg); }
+            100% { transform: translate(100px, -100px) scale(1.2) rotate(45deg); }
+        }
+
+        .app-container {
+            position: relative;
+            z-index: 10;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 50px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 450px;
+            transition: all 0.5s ease;
+            box-sizing: border-box;
+        }
+
+        body.zone-active .app-container {
+            box-shadow: 0 0 50px rgba(0, 255, 255, 0.4), inset 0 0 30px rgba(255, 0, 255, 0.3);
+            /* UI自体の色調も合成モードにする */
+            backdrop-filter: blur(10px) hue-rotate(45deg);
+            mix-blend-mode: hard-light;
+            animation: glitch-shake 0.3s infinite;
+        }
+
+        @keyframes glitch-shake {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 1px); }
+            40% { transform: translate(1px, -1px); }
+            60% { transform: translate(-1px, 2px); }
+            80% { transform: translate(2px, -1px); }
+            100% { transform: translate(0); }
+        }
+
+        h1 {
+            margin: 0 0 20px 0;
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        body.zone-active h1 {
+            text-shadow: 2px 2px 0 #0ff, -2px -2px 0 #f0f;
+            animation: text-pulse 1.5s infinite alternate;
+        }
+
+        @keyframes text-pulse {
+            from { text-shadow: 2px 2px 0 #0ff, -2px -2px 0 #f0f; transform: scale(1); }
+            to { text-shadow: 4px 4px 10px #0ff, -4px -4px 10px #f0f; transform: scale(1.05); }
+        }
+
+        .result-viewport {
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+            font-size: 100px;
+            position: relative;
+        }
+
+        .result-viewport img {
+            max-height: 120px;
+            max-width: 120px;
+            object-fit: contain;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* 描画時のアニメーション */
+        .animate-pop {
+            animation: popBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        @keyframes popBounce {
+            0% { transform: scale(0) rotate(-30deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(10deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .action-btn {
+            background: linear-gradient(45deg, var(--btn-grad-1), var(--btn-grad-2));
+            color: #fff;
+            border: none;
+            padding: 18px 50px;
+            font-size: 24px;
+            font-weight: 900;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 25px var(--shadow-color);
+            transition: transform 0.2s, box-shadow 0.2s;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 35px var(--shadow-color);
+        }
+
+        .action-btn:active {
+            transform: translateY(2px) scale(0.95);
+        }
+
+        .status {
+            margin-top: 25px;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-color);
+            min-height: 24px;
+            letter-spacing: 0.5px;
+        }
+
+        .settings-panel {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px dashed var(--glass-border);
+            font-size: 13px;
+            text-align: left;
+            opacity: 0.8;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 15px;
+        }
+
+        body.zone-active .settings-panel {
+            background: rgba(0,0,0,0.3);
+            display: none; /* ゾーン中は設定を隠してスッキリさせる */
+        }
+
+        .settings-panel input[type="file"] {
+            margin-top: 8px;
+            font-family: inherit;
+        }
+
+        /* 統計コンテナ */
+        .stats-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 20;
+        }
+
+        .stat-badge {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 統計表示 -->
+    <div class="stats-container">
+        <div class="stat-badge">🎲 <span id="s-total">0</span></div>
+        <div class="stat-badge">👺 <span id="s-tengu">0</span></div>
+        <div class="stat-badge">🖼️ <span id="s-img">0</span></div>
+    </div>
+
+    <!-- ゾーン用合成背景 -->
+    <div class="zone-fx-container">
+        <div class="orb orb1"></div>
+        <div class="orb orb2"></div>
+        <div class="orb orb3"></div>
+    </div>
+
+    <div class="app-container">
+        <h1 id="app-title">幸運のおみくじ</h1>
+        
+        <div class="result-viewport" id="viewport">
+            <span class="animate-pop">🔮</span>
+        </div>
+
+        <button class="action-btn" onclick="performDraw()">引く！</button>
+        
+        <div class="status" id="status-text"></div>
+
+        <div class="settings-panel">
+            <strong>⚙️ 画像の設定 (Zone当選時)</strong><br>
+            <input type="file" accept="image/*" onchange="uploadImage(event)">
+            <div style="margin-top: 5px; font-size: 11px;">※ 画像を設定すると「ゾーン」時の当たりで表示されます。設定しない場合は画像エラーの仮表示になります。</div>
+        </div>
+    </div>
+
+    <script>
+        // DOM要素の取得
+        const viewport = document.getElementById('viewport');
+        const statusText = document.getElementById('status-text');
+        const appTitle = document.getElementById('app-title');
+
+        // 統計データ
+        const stats = { total: 0, tengu: 0, image: 0 };
+        // 状態パラメーター
+        let isZone = false;
+        let zoneTurnsLeft = 0;
+        let attachedImageSrc = ''; // ユーザー添付画像のソース
+
+        // 統計の更新
+        function updateStats() {
+            stats.total++;
+            document.getElementById('s-total').innerText = stats.total;
+            document.getElementById('s-tengu').innerText = stats.tengu;
+            document.getElementById('s-img').innerText = stats.image;
+        }
+
+        // ユーザーが添付画像をアップロードした時の処理
+        function uploadImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => attachedImageSrc = ev.target.result;
+            reader.readAsDataURL(file);
+        }
+
+        // おみくじを引くメイン関数
+        function performDraw() {
+            // アニメーションを再発火させるため、一旦DOMをクリアする
+            viewport.innerHTML = '';
+            statusText.innerText = '';
+            
+            updateStats();
+
+            // ほんの少し遅らせて描画（アニメーションを滑らかに見せるため）
+            setTimeout(() => {
+                if (isZone) {
+                    processZone();
+                } else {
+                    processNormal();
+                }
+            }, 50);
+        }
+
+        // 通常時の抽選ロジック
+        function processNormal() {
+            const r = Math.random();
+            let content = '';
+
+            // 1/13 の確率 (約7.69%) で👺
+            if (r < (1 / 13)) {
+                content = '<span class="animate-pop">👺</span>';
+                stats.tengu++;
+                document.getElementById('s-tengu').innerText = stats.tengu;
+            } else {
+                // はずれの場合は添付画像
+                if (attachedImageSrc) {
+                    content = `<img src="${attachedImageSrc}" class="animate-pop" alt="添付画像">`;
+                } else {
+                    // もしファイルがアップロードされていなければ代替テキスト
+                    content = `<span class="animate-pop" style="font-size: 50px;">🖼️<br><small>画像未設定</small></span>`;
+                }
+                stats.image++;
+                document.getElementById('s-img').innerText = stats.image;
+            }
+            
+            renderResult(content);
+
+            // 通常抽選後、一定確率（ここでは10%）でゾーンに突入
+            if (Math.random() < 0.1) {
+                activateZone();
+            }
+        }
+
+        // ゾーン中の抽選ロジック
+        function processZone() {
+            const r = Math.random();
+            let content = '';
+
+            // ゾーン中限定：30回中23回(約76.6%)の確率で👺
+            if (r < (23 / 30)) {
+                content = '<span class="animate-pop">👺</span>';
+                stats.tengu++;
+                document.getElementById('s-tengu').innerText = stats.tengu;
+            } else {
+                // ゾーン中のはずれ（残りの7回）は添付画像
+                if (attachedImageSrc) {
+                    content = `<img src="${attachedImageSrc}" class="animate-pop" alt="添付画像">`;
+                } else {
+                    content = `<span class="animate-pop" style="font-size: 50px;">🖼️<br><small>画像未設定</small></span>`;
+                }
+                stats.image++;
+                document.getElementById('s-img').innerText = stats.image;
+            }
+
+            renderResult(content);
+            
+            // ゾーンターンの消費
+            zoneTurnsLeft--;
+            statusText.innerText = `⚠️ 合成ゾーン継続中... 残り${zoneTurnsLeft}回`;
+
+            if (zoneTurnsLeft <= 0) {
+                deactivateZone();
+            }
+        }
+
+        // 結果を画面に表示
+        function renderResult(html) {
+            viewport.innerHTML = html;
+        }
+
+        // ゾーン突入処理
+        function activateZone() {
+            isZone = true;
+            // ゾーンモードは5〜10ターン継続する
+            zoneTurnsLeft = Math.floor(Math.random() * 6) + 5; 
+            document.body.classList.add('zone-active');
+            appTitle.innerText = '⚠️ 合成ZONE ⚠️';
+            statusText.innerText = `💥 ゾーン突入!! (継続: ${zoneTurnsLeft}回)`;
+        }
+
+        // ゾーン終了処理
+        function deactivateZone() {
+            isZone = false;
+            document.body.classList.remove('zone-active');
+            appTitle.innerText = '幸運のおみくじ';
+            setTimeout(() => {
+                statusText.innerText = 'ゾーン終了... 通常モードに戻りました';
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
