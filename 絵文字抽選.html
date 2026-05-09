@@ -199,27 +199,7 @@
             letter-spacing: 0.5px;
         }
 
-        .settings-panel {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px dashed var(--glass-border);
-            font-size: 13px;
-            text-align: left;
-            opacity: 0.8;
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 15px;
-        }
 
-        body.zone-active .settings-panel {
-            background: rgba(0,0,0,0.3);
-            display: none; /* ゾーン中は設定を隠してスッキリさせる */
-        }
-
-        .settings-panel input[type="file"] {
-            margin-top: 8px;
-            font-family: inherit;
-        }
 
         /* 統計コンテナ */
         .stats-container {
@@ -273,11 +253,7 @@
         
         <div class="status" id="status-text"></div>
 
-        <div class="settings-panel">
-            <strong>⚙️ 画像の設定 (Zone当選時)</strong><br>
-            <input type="file" accept="image/*" onchange="uploadImage(event)">
-            <div style="margin-top: 5px; font-size: 11px;">※ 画像を設定すると「ゾーン」時の当たりで表示されます。設定しない場合は画像エラーの仮表示になります。</div>
-        </div>
+
     </div>
 
     <script>
@@ -291,7 +267,7 @@
         // 状態パラメーター
         let isZone = false;
         let zoneTurnsLeft = 0;
-        let attachedImageSrc = '.test/See/distorted_face_1.png'; // ユーザー添付画像のソース
+        let attachedImageSrc = './See/distorted_face_1.png'; // ユーザー添付画像のソース
 
         // 統計の更新
         function updateStats() {
@@ -299,15 +275,6 @@
             document.getElementById('s-total').innerText = stats.total;
             document.getElementById('s-tengu').innerText = stats.tengu;
             document.getElementById('s-img').innerText = stats.image;
-        }
-
-        // ユーザーが添付画像をアップロードした時の処理
-        function uploadImage(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = ev => attachedImageSrc = ev.target.result;
-            reader.readAsDataURL(file);
         }
 
         // おみくじを引くメイン関数
